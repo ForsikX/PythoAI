@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Python Logo — Smooth Cool Animation</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(ellipse at center, #1a1a2e 0%, #0d0d1a 50%, #05050a 100%);
+      overflow: hidden;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+    }
+
+    /* Subtle checkered pattern for transparency feel */
+    body::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(45deg, #12121f 25%, transparent 25%),
+        linear-gradient(-45deg, #12121f 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, #12121f 75%),
+        linear-gradient(-45deg, transparent 75%, #12121f 75%);
+      background-size: 40px 40px;
+      background-position: 0 0, 0 20px, 20px -20px, -20px 0px;
+      opacity: 0.15;
+      pointer-events: none;
+    }
+
+    .stage {
+      position: relative;
+      width: min(90vw, 520px);
+      height: min(90vw, 520px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* === LOGO CONTAINER === */
+    .logo-wrapper {
+      position: relative;
+      width: 280px;
+      height: 280px;
+      z-index: 10;
+    }
+
+    .python-logo {
+      width: 100%;
+      height: 100%;
+      overflow: visible;
+    }
+
+    /* Blue snake */
+    .blue-snake {
+      fill: url(#blueGrad);
+      filter: drop-shadow(0 0 8px rgba(55, 118, 171, 0.8));
+      transform-origin: 50% 50%;
+      animation: flyInBlue 2.2s cubic-bezier(0.22, 1, 0.36, 1) forwards,
+                 settleBlue 0.8s 2.2s ease-out forwards,
+                 pulseBlue 3s 3.5s ease-in-out infinite;
+    }
+
+    /* Yellow snake */
+    .yellow-snake {
+      fill: url(#yellowGrad);
+      filter: drop-shadow(0 0 8px rgba(255, 212, 59, 0.8));
+      transform-origin: 50% 50%;
+      animation: flyInYellow 2.2s cubic-bezier(0.22, 1, 0.36, 1) forwards,
+                 settleYellow 0.8s 2.2s ease-out forwards,
+                 pulseYellow 3s 3.5s ease-in-out infinite;
+    }
+
+    /* Eyes */
+    .eye {
+      fill: #fff;
+      opacity: 0;
+      animation: eyesAppear 0.6s 2.4s ease-out forwards;
+    }
+
+    /* Motion trails (ghost copies) */
+    .trail-blue {
+      fill: #3776AB;
+      opacity: 0;
+      filter: blur(4px);
+      animation: trailBlue 1.8s 0.1s ease-out forwards;
+    }
+    .trail-yellow {
+      fill: #FFD43B;
+      opacity: 0;
+      filter: blur(4px);
+      animation: trailYellow 1.8s 0.1s ease-out forwards;
+    }
+
+    /* === GLOW RINGS === */
+    .glow-ring {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      border-radius: 50%;
+      border: 2px solid transparent;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+      opacity: 0;
+    }
+
+    .ring1 {
+      width: 320px;
+      height: 320px;
+      border-color: rgba(55, 118, 171, 0.4);
+      box-shadow: 0 0 20px rgba(55, 118, 171, 0.3), inset 0 0 20px rgba(55, 118, 171, 0.15);
+      animation: ringAppear 1.2s 2.6s ease-out forwards,
+                 ringPulse 4s 3.8s ease-in-out infinite;
+    }
+
+    .ring2 {
+      width: 380px;
+      height: 380px;
+      border-color: rgba(255, 212, 59, 0.35);
+      box-shadow: 0 0 25px rgba(255, 212, 59, 0.25);
+      animation: ringAppear 1.2s 2.9s ease-out forwards,
+                 ringPulse 4.5s 4.1s ease-in-out infinite reverse;
+    }
+
+    /* === ORBITING RINGS (magical) === */
+    .orbit {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      border-radius: 50%;
+      border: 3px solid;
+      pointer-events: none;
+      opacity: 0;
+      transform-style: preserve-3d;
+    }
+
+    .orbit1 {
+      width: 360px;
+      height: 200px;
+      border-color: rgba(100, 180, 255, 0.7);
+      box-shadow: 0 0 20px rgba(80, 160, 255, 0.6), inset 0 0 15px rgba(80, 160, 255, 0.2);
+      animation: orbitAppear1 1.5s 3.5s ease-out forwards,
+                 spinOrbit1 9s 5s linear infinite;
+    }
+
+    .orbit2 {
+      width: 320px;
+      height: 180px;
+      border-color: rgba(255, 120, 220, 0.65);
+      box-shadow: 0 0 22px rgba(255, 80, 200, 0.55), inset 0 0 12px rgba(255, 80, 200, 0.2);
+      animation: orbitAppear2 1.5s 3.8s ease-out forwards,
+                 spinOrbit2 7s 5.2s linear infinite reverse;
+    }
+
+    .orbit3 {
+      width: 420px;
+      height: 240px;
+      border-color: rgba(180, 100, 255, 0.5);
+      box-shadow: 0 0 25px rgba(160, 60, 255, 0.45), inset 0 0 18px rgba(160, 60, 255, 0.15);
+      animation: orbitAppear3 1.5s 4.1s ease-out forwards,
+                 spinOrbit3 12s 5.4s linear infinite;
+    }
+
+    /* Title */
+    .title {
+      position: absolute;
+      bottom: -70px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: rgba(255, 255, 255, 0.7);
+      font-size: 1.1rem;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      opacity: 0;
+      animation: fadeInTitle 1.5s 5.5s ease-out forwards;
+      text-shadow: 0 0 20px rgba(55, 118, 171, 0.5);
+    }
+
+    /* === KEYFRAMES === */
+    @keyframes flyInBlue {
+      0% {
+        transform: translateX(-220px) translateY(-40px) rotate(-25deg) scale(0.6);
+        opacity: 0;
+        filter: drop-shadow(0 0 20px rgba(55, 118, 171, 1)) blur(2px);
+      }
+      40% {
+        opacity: 1;
+      }
+      100% {
+        transform: translateX(0) translateY(0) rotate(0deg) scale(1);
+        opacity: 1;
+        filter: drop-shadow(0 0 8px rgba(55, 118, 171, 0.8));
+      }
+    }
+
+    @keyframes flyInYellow {
+      0% {
+        transform: translateX(220px) translateY(40px) rotate(25deg) scale(0.6);
+        opacity: 0;
+        filter: drop-shadow(0 0 20px rgba(255, 212, 59, 1)) blur(2px);
+      }
+      40% {
+        opacity: 1;
+      }
+      100% {
+        transform: translateX(0) translateY(0) rotate(0deg) scale(1);
+        opacity: 1;
+        filter: drop-shadow(0 0 8px rgba(255, 212, 59, 0.8));
+      }
+    }
+
+    @keyframes trailBlue {
+      0% {
+        transform: translateX(-280px) translateY(-50px) rotate(-30deg) scale(0.5);
+        opacity: 0.5;
+      }
+      70% {
+        opacity: 0.25;
+      }
+      100% {
+        transform: translateX(-20px) translateY(-5px) rotate(-5deg) scale(0.95);
+        opacity: 0;
+      }
+    }
+
+    @keyframes trailYellow {
+      0% {
+        transform: translateX(280px) translateY(50px) rotate(30deg) scale(0.5);
+        opacity: 0.5;
+      }
+      70% {
+        opacity: 0.25;
+      }
+      100% {
+        transform: translateX(20px) translateY(5px) rotate(5deg) scale(0.95);
+        opacity: 0;
+      }
+    }
+
+    @keyframes settleBlue {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.06); }
+      100% { transform: scale(1); }
+    }
+
+    @keyframes settleYellow {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.06); }
+      100% { transform: scale(1); }
+    }
+
+    @keyframes eyesAppear {
+      0% { opacity: 0; transform: scale(0); }
+      70% { opacity: 1; transform: scale(1.3); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+
+    @keyframes pulseBlue {
+      0%, 100% { filter: drop-shadow(0 0 8px rgba(55, 118, 171, 0.8)); }
+      50% { filter: drop-shadow(0 0 18px rgba(55, 118, 171, 1)); }
+    }
+
+    @keyframes pulseYellow {
+      0%, 100% { filter: drop-shadow(0 0 8px rgba(255, 212, 59, 0.8)); }
+      50% { filter: drop-shadow(0 0 18px rgba(255, 212, 59, 1)); }
+    }
+
+    @keyframes ringAppear {
+      0% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.5);
+      }
+      100% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+      }
+    }
+
+    @keyframes ringPulse {
+      0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.7; }
+      50% { transform: translate(-50%, -50%) scale(1.05); opacity: 1; }
+    }
+
+    @keyframes orbitAppear1 {
+      0% {
+        opacity: 0;
+        transform: translate(-50%, -50%) rotateX(70deg) scale(0.3);
+      }
+      100% {
+        opacity: 0.95;
+        transform: translate(-50%, -50%) rotateX(70deg) scale(1);
+      }
+    }
+    @keyframes orbitAppear2 {
+      0% {
+        opacity: 0;
+        transform: translate(-50%, -50%) rotateX(65deg) rotateZ(40deg) scale(0.3);
+      }
+      100% {
+        opacity: 0.9;
+        transform: translate(-50%, -50%) rotateX(65deg) rotateZ(40deg) scale(1);
+      }
+    }
+    @keyframes orbitAppear3 {
+      0% {
+        opacity: 0;
+        transform: translate(-50%, -50%) rotateX(75deg) rotateZ(-30deg) scale(0.3);
+      }
+      100% {
+        opacity: 0.85;
+        transform: translate(-50%, -50%) rotateX(75deg) rotateZ(-30deg) scale(1);
+      }
+    }
+
+    @keyframes spinOrbit1 {
+      from { transform: translate(-50%, -50%) rotateX(70deg) rotateZ(0deg); }
+      to   { transform: translate(-50%, -50%) rotateX(70deg) rotateZ(360deg); }
+    }
+    @keyframes spinOrbit2 {
+      from { transform: translate(-50%, -50%) rotateX(65deg) rotateZ(40deg); }
+      to   { transform: translate(-50%, -50%) rotateX(65deg) rotateZ(400deg); }
+    }
+    @keyframes spinOrbit3 {
+      from { transform: translate(-50%, -50%) rotateX(75deg) rotateZ(-30deg); }
+      to   { transform: translate(-50%, -50%) rotateX(75deg) rotateZ(330deg); }
+    }
+
+    @keyframes fadeInTitle {
+      from { opacity: 0; transform: translateX(-50%) translateY(15px); }
+      to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+    }
+
+    /* Soft ambient glow behind logo */
+    .ambient {
+      position: absolute;
+      width: 420px;
+      height: 420px;
+      border-radius: 50%;
+      background: radial-gradient(circle,
+        rgba(55, 118, 171, 0.25) 0%,
+        rgba(255, 212, 59, 0.12) 40%,
+        transparent 70%);
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      opacity: 0;
+      animation: ambientGlow 2s 3s ease-out forwards;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    @keyframes ambientGlow {
+      from { opacity: 0; transform: translate(-50%, -50%) scale(0.6); }
+      to   { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+    }
+
+    /* Replay hint */
+    .hint {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      color: rgba(255,255,255,0.35);
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: color 0.3s;
+      user-select: none;
+    }
+    .hint:hover {
+      color: rgba(255,255,255,0.7);
+    }
+  </style>
+</head>
+<body>
+  <div class="stage">
+    <!-- Ambient glow -->
+    <div class="ambient"></div>
+
+    <!-- Glow rings -->
+    <div class="glow-ring ring1"></div>
+    <div class="glow-ring ring2"></div>
+
+    <!-- Magical orbits -->
+    <div class="orbit orbit1"></div>
+    <div class="orbit orbit2"></div>
+    <div class="orbit orbit3"></div>
+
+    <!-- Logo -->
+    <div class="logo-wrapper">
+      <svg class="python-logo" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <!-- Blue gradient (glossy) -->
+          <linearGradient id="blueGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#5A9FD4"/>
+            <stop offset="50%" stop-color="#3776AB"/>
+            <stop offset="100%" stop-color="#2A5F8F"/>
+          </linearGradient>
+          <!-- Yellow gradient -->
+          <linearGradient id="yellowGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#FFE873"/>
+            <stop offset="50%" stop-color="#FFD43B"/>
+            <stop offset="100%" stop-color="#E8B800"/>
+          </linearGradient>
+
+          </defs>
+
+        <!-- Motion trails (ghosts) -->
+        <path class="trail-blue" d="M116 296c0-30.328 24.672-55 55-55h170c13.785 0 25-11.215 25-25V75c0-41.355-33.645-75-75-75h-70c-41.355 0-75 33.645-75 75v41h110c8.285 0 15 6.715 15 15s-6.715 15-15 15H55c-41.355 0-75 33.645-75 75v70c0 41.355 33.645 75 75 75h41zm105-220c-8.285 0-15-6.715-15-15s6.715-15 15-15 15 6.715 15 15-6.715 15-15 15z"/>
+        <path class="trail-yellow" d="M437 146h-41v70c0 30.328-24.672 55-55 55H171c-13.785 0-25 11.215-25 25v141c0 41.355 33.645 75 75 75h70c41.355 0 75-33.645 75-75v-41H255c-8.285 0-15-6.715-15-15s6.715-15 15-15h181c41.355 0 75-33.645 75-75v-70c0-41.355-33.645-75-75-75zm-146 290c8.285 0 15 6.715 15 15s-6.715 15-15 15-15-6.715-15-15 6.715-15 15-15z"/>
+
+        <!-- Main logo paths -->
+        <path class="blue-snake" d="M116 296c0-30.328 24.672-55 55-55h170c13.785 0 25-11.215 25-25V75c0-41.355-33.645-75-75-75h-70c-41.355 0-75 33.645-75 75v41h110c8.285 0 15 6.715 15 15s-6.715 15-15 15H55c-41.355 0-75 33.645-75 75v70c0 41.355 33.645 75 75 75h41zm105-220c-8.285 0-15-6.715-15-15s6.715-15 15-15 15 6.715 15 15-6.715 15-15 15z"/>
+        <path class="yellow-snake" d="M437 146h-41v70c0 30.328-24.672 55-55 55H171c-13.785 0-25 11.215-25 25v141c0 41.355 33.645 75 75 75h70c41.355 0 75-33.645 75-75v-41H255c-8.285 0-15-6.715-15-15s6.715-15 15-15h181c41.355 0 75-33.645 75-75v-70c0-41.355-33.645-75-75-75zm-146 290c8.285 0 15 6.715 15 15s-6.715 15-15 15-15-6.715-15-15 6.715-15 15-15z"/>
+
+        <!-- Eyes -->
+        <circle class="eye" cx="221" cy="91" r="15"/>
+        <circle class="eye" cx="291" cy="421" r="15"/>
+      </svg>
+    </div>
+
+    <div class="title">Python</div>
+  </div>
+
+  <div class="hint" onclick="location.reload()">↻ Replay</div>
+
+  <script>
+    // Optional: slight parallax on mouse move for extra coolness
+    document.addEventListener('mousemove', (e) => {
+      const x = (e.clientX / window.innerWidth - 0.5) * 12;
+      const y = (e.clientY / window.innerHeight - 0.5) * 12;
+      document.querySelector('.logo-wrapper').style.transform =
+        `translate(${x}px, ${y}px)`;
+    });
+  </script>
+</body>
+</html>

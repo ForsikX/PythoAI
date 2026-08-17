@@ -1,0 +1,2310 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PythoAI</title>
+  <link rel="icon" href="favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" href="favicon.png" sizes="64x64">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg-deep: #050510;
+      --bg-panel: rgba(12, 14, 28, 0.78);
+      --bg-input: rgba(20, 22, 40, 0.85);
+      --accent-blue: #4fc3ff;
+      --accent-purple: #a78bfa;
+      --text-primary: #e8eaf6;
+      --text-secondary: #94a3b8;
+    }
+
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: var(--bg-deep);
+      color: var(--text-primary);
+      min-height: 100vh;
+      overflow: hidden;
+    }
+
+    /* ========== SCREENS ========== */
+    .screen {
+      position: fixed;
+      inset: 0;
+      display: none;
+      flex-direction: column;
+      z-index: 10;
+    }
+    .screen.active { display: flex; }
+
+    /* ========== INTRO ========== */
+    #intro-screen {
+      background: radial-gradient(ellipse at center, #1a1a2e 0%, #0d0d1a 50%, #05050a 100%);
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .stage {
+      position: relative;
+      width: min(90vw, 480px);
+      height: min(90vw, 480px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 1.1s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.8s ease;
+    }
+
+    .stage.moved {
+      transform: translateY(-90px) scale(0.55);
+    }
+
+    .logo-wrapper {
+      position: relative;
+      width: 260px;
+      height: 260px;
+      z-index: 10;
+    }
+
+    .python-logo { width: 100%; height: 100%; overflow: visible; }
+
+    .blue-snake {
+      fill: url(#blueGrad);
+      filter: drop-shadow(0 0 8px rgba(55, 118, 171, 0.8));
+      transform-origin: 50% 50%;
+      animation: flyInBlue 2.2s cubic-bezier(0.22, 1, 0.36, 1) forwards,
+                 settleBlue 0.8s 2.2s ease-out forwards,
+                 pulseBlue 3s 3.5s ease-in-out infinite;
+    }
+
+    .yellow-snake {
+      fill: url(#yellowGrad);
+      filter: drop-shadow(0 0 8px rgba(255, 212, 59, 0.8));
+      transform-origin: 50% 50%;
+      animation: flyInYellow 2.2s cubic-bezier(0.22, 1, 0.36, 1) forwards,
+                 settleYellow 0.8s 2.2s ease-out forwards,
+                 pulseYellow 3s 3.5s ease-in-out infinite;
+    }
+
+    .eye {
+      fill: #fff;
+      opacity: 0;
+      animation: eyesAppear 0.6s 2.4s ease-out forwards;
+    }
+
+    .trail-blue {
+      fill: #3776AB;
+      opacity: 0;
+      filter: blur(4px);
+      animation: trailBlue 1.8s 0.1s ease-out forwards;
+    }
+    .trail-yellow {
+      fill: #FFD43B;
+      opacity: 0;
+      filter: blur(4px);
+      animation: trailYellow 1.8s 0.1s ease-out forwards;
+    }
+
+    .glow-ring {
+      position: absolute;
+      top: 50%; left: 50%;
+      border-radius: 50%;
+      border: 2px solid transparent;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+      opacity: 0;
+    }
+    .ring1 {
+      width: 300px; height: 300px;
+      border-color: rgba(55, 118, 171, 0.4);
+      box-shadow: 0 0 20px rgba(55, 118, 171, 0.3), inset 0 0 20px rgba(55, 118, 171, 0.15);
+      animation: ringAppear 1.2s 2.6s ease-out forwards, ringPulse 4s 3.8s ease-in-out infinite;
+    }
+    .ring2 {
+      width: 360px; height: 360px;
+      border-color: rgba(255, 212, 59, 0.35);
+      box-shadow: 0 0 25px rgba(255, 212, 59, 0.25);
+      animation: ringAppear 1.2s 2.9s ease-out forwards, ringPulse 4.5s 4.1s ease-in-out infinite reverse;
+    }
+
+    .orbit {
+      position: absolute;
+      top: 50%; left: 50%;
+      border-radius: 50%;
+      border: 2.5px solid;
+      pointer-events: none;
+      opacity: 0;
+      transform-style: preserve-3d;
+    }
+    .orbit1 {
+      width: 340px; height: 190px;
+      border-color: rgba(100, 180, 255, 0.65);
+      box-shadow: 0 0 18px rgba(80, 160, 255, 0.5);
+      animation: orbitAppear1 1.5s 3.5s ease-out forwards, spinOrbit1 9s 5s linear infinite;
+    }
+    .orbit2 {
+      width: 300px; height: 170px;
+      border-color: rgba(255, 120, 220, 0.55);
+      box-shadow: 0 0 18px rgba(255, 80, 200, 0.45);
+      animation: orbitAppear2 1.5s 3.8s ease-out forwards, spinOrbit2 7s 5.2s linear infinite reverse;
+    }
+    .orbit3 {
+      width: 400px; height: 220px;
+      border-color: rgba(180, 100, 255, 0.45);
+      box-shadow: 0 0 20px rgba(160, 60, 255, 0.4);
+      animation: orbitAppear3 1.5s 4.1s ease-out forwards, spinOrbit3 12s 5.4s linear infinite;
+    }
+
+    .ambient {
+      position: absolute;
+      width: 400px; height: 400px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(55,118,171,0.25) 0%, rgba(255,212,59,0.12) 40%, transparent 70%);
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      opacity: 0;
+      animation: ambientGlow 2s 3s ease-out forwards;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .get-started-wrap {
+      position: absolute;
+      bottom: 18%;
+      left: 50%;
+      transform: translateX(-50%) translateY(30px);
+      opacity: 0;
+      transition: all 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+      z-index: 20;
+      text-align: center;
+    }
+    .get-started-wrap.visible {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .get-started-btn {
+      padding: 16px 42px;
+      font-size: 1.05rem;
+      font-weight: 600;
+      letter-spacing: 1px;
+      color: white;
+      background: linear-gradient(135deg, #0ea5e9 0%, #6366f1 50%, #a855f7 100%);
+      border: none;
+      border-radius: 16px;
+      cursor: pointer;
+      box-shadow: 0 0 30px rgba(99, 102, 241, 0.45), 0 8px 24px rgba(0,0,0,0.35);
+      transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+      position: relative;
+      overflow: hidden;
+    }
+    .get-started-btn:hover {
+      transform: scale(1.06) translateY(-3px);
+      box-shadow: 0 0 45px rgba(99, 102, 241, 0.65), 0 12px 30px rgba(0,0,0,0.4);
+    }
+    .get-started-btn:active { transform: scale(0.97); }
+
+    /* Keyframes for logo */
+    @keyframes flyInBlue {
+      0% { transform: translateX(-220px) translateY(-40px) rotate(-25deg) scale(0.6); opacity: 0; filter: drop-shadow(0 0 20px rgba(55,118,171,1)) blur(2px); }
+      40% { opacity: 1; }
+      100% { transform: translateX(0) translateY(0) rotate(0) scale(1); opacity: 1; filter: drop-shadow(0 0 8px rgba(55,118,171,0.8)); }
+    }
+    @keyframes flyInYellow {
+      0% { transform: translateX(220px) translateY(40px) rotate(25deg) scale(0.6); opacity: 0; filter: drop-shadow(0 0 20px rgba(255,212,59,1)) blur(2px); }
+      40% { opacity: 1; }
+      100% { transform: translateX(0) translateY(0) rotate(0) scale(1); opacity: 1; filter: drop-shadow(0 0 8px rgba(255,212,59,0.8)); }
+    }
+    @keyframes trailBlue {
+      0% { transform: translateX(-280px) translateY(-50px) rotate(-30deg) scale(0.5); opacity: 0.5; }
+      70% { opacity: 0.25; }
+      100% { transform: translateX(-20px) translateY(-5px) rotate(-5deg) scale(0.95); opacity: 0; }
+    }
+    @keyframes trailYellow {
+      0% { transform: translateX(280px) translateY(50px) rotate(30deg) scale(0.5); opacity: 0.5; }
+      70% { opacity: 0.25; }
+      100% { transform: translateX(20px) translateY(5px) rotate(5deg) scale(0.95); opacity: 0; }
+    }
+    @keyframes settleBlue { 0% { transform: scale(1); } 50% { transform: scale(1.06); } 100% { transform: scale(1); } }
+    @keyframes settleYellow { 0% { transform: scale(1); } 50% { transform: scale(1.06); } 100% { transform: scale(1); } }
+    @keyframes eyesAppear { 0% { opacity: 0; transform: scale(0); } 70% { opacity: 1; transform: scale(1.3); } 100% { opacity: 1; transform: scale(1); } }
+    @keyframes pulseBlue { 0%,100% { filter: drop-shadow(0 0 8px rgba(55,118,171,0.8)); } 50% { filter: drop-shadow(0 0 18px rgba(55,118,171,1)); } }
+    @keyframes pulseYellow { 0%,100% { filter: drop-shadow(0 0 8px rgba(255,212,59,0.8)); } 50% { filter: drop-shadow(0 0 18px rgba(255,212,59,1)); } }
+    @keyframes ringAppear { 0% { opacity: 0; transform: translate(-50%,-50%) scale(0.5); } 100% { opacity: 1; transform: translate(-50%,-50%) scale(1); } }
+    @keyframes ringPulse { 0%,100% { transform: translate(-50%,-50%) scale(1); opacity: 0.7; } 50% { transform: translate(-50%,-50%) scale(1.05); opacity: 1; } }
+    @keyframes orbitAppear1 { 0% { opacity: 0; transform: translate(-50%,-50%) rotateX(70deg) scale(0.3); } 100% { opacity: 0.95; transform: translate(-50%,-50%) rotateX(70deg) scale(1); } }
+    @keyframes orbitAppear2 { 0% { opacity: 0; transform: translate(-50%,-50%) rotateX(65deg) rotateZ(40deg) scale(0.3); } 100% { opacity: 0.9; transform: translate(-50%,-50%) rotateX(65deg) rotateZ(40deg) scale(1); } }
+    @keyframes orbitAppear3 { 0% { opacity: 0; transform: translate(-50%,-50%) rotateX(75deg) rotateZ(-30deg) scale(0.3); } 100% { opacity: 0.85; transform: translate(-50%,-50%) rotateX(75deg) rotateZ(-30deg) scale(1); } }
+    @keyframes spinOrbit1 { from { transform: translate(-50%,-50%) rotateX(70deg) rotateZ(0deg); } to { transform: translate(-50%,-50%) rotateX(70deg) rotateZ(360deg); } }
+    @keyframes spinOrbit2 { from { transform: translate(-50%,-50%) rotateX(65deg) rotateZ(40deg); } to { transform: translate(-50%,-50%) rotateX(65deg) rotateZ(400deg); } }
+    @keyframes spinOrbit3 { from { transform: translate(-50%,-50%) rotateX(75deg) rotateZ(-30deg); } to { transform: translate(-50%,-50%) rotateX(75deg) rotateZ(330deg); } }
+    @keyframes ambientGlow { from { opacity: 0; transform: translate(-50%,-50%) scale(0.6); } to { opacity: 1; transform: translate(-50%,-50%) scale(1); } }
+
+    /* ========== SETUP ========== */
+    #setup-screen {
+      background: radial-gradient(ellipse at 30% 20%, rgba(79,70,229,0.12) 0%, transparent 50%),
+                  radial-gradient(ellipse at 70% 80%, rgba(168,85,247,0.1) 0%, transparent 50%),
+                  #050510;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .setup-card {
+      width: 100%;
+      max-width: 480px;
+      background: rgba(12, 14, 28, 0.85);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 24px;
+      padding: 36px 32px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    }
+
+    .setup-progress {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 28px;
+    }
+    .setup-dot {
+      flex: 1;
+      height: 4px;
+      border-radius: 2px;
+      background: rgba(255,255,255,0.1);
+      transition: background 0.3s;
+    }
+    .setup-dot.active { background: linear-gradient(90deg, #0ea5e9, #a855f7); }
+
+    .setup-step { display: none; }
+    .setup-step.active { display: block; }
+
+    .setup-title {
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-bottom: 8px;
+      background: linear-gradient(135deg, #e0f2fe, #c4b5fd);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .setup-desc {
+      font-size: 0.95rem;
+      color: var(--text-secondary);
+      margin-bottom: 24px;
+      line-height: 1.5;
+    }
+
+    .setup-input {
+      width: 100%;
+      padding: 14px 16px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 12px;
+      color: white;
+      font-size: 1rem;
+      font-family: inherit;
+      outline: none;
+      margin-bottom: 20px;
+      transition: border-color 0.2s;
+    }
+    .setup-input:focus { border-color: rgba(79,195,255,0.5); }
+
+    .setup-options {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 24px;
+    }
+    .setup-option {
+      padding: 14px 16px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 0.95rem;
+    }
+    .setup-option:hover, .setup-option.selected {
+      background: rgba(79,195,255,0.12);
+      border-color: rgba(79,195,255,0.35);
+    }
+
+    .setup-nav {
+      display: flex;
+      gap: 12px;
+      justify-content: flex-end;
+    }
+    .setup-btn {
+      padding: 12px 24px;
+      border-radius: 12px;
+      font-size: 0.95rem;
+      font-weight: 500;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s;
+      font-family: inherit;
+    }
+    .setup-btn.secondary {
+      background: rgba(255,255,255,0.06);
+      color: var(--text-secondary);
+    }
+    .setup-btn.secondary:hover { background: rgba(255,255,255,0.1); color: white; }
+    .setup-btn.primary {
+      background: linear-gradient(135deg, #0ea5e9, #6366f1);
+      color: white;
+      box-shadow: 0 4px 16px rgba(99,102,241,0.35);
+    }
+    .setup-btn.primary:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(99,102,241,0.45); }
+
+    /* ========== CHAT ========== */
+    #chat-screen { flex-direction: row; }
+
+    .cosmos {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      background: 
+        radial-gradient(ellipse at 20% 20%, rgba(79,70,229,0.15) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 80%, rgba(168,85,247,0.12) 0%, transparent 50%),
+        linear-gradient(180deg, #050510 0%, #0a0a1a 50%, #050510 100%);
+    }
+    .stars {
+      position: absolute; inset: 0;
+      background-image: 
+        radial-gradient(1.5px 1.5px at 10% 20%, white, transparent),
+        radial-gradient(1px 1px at 30% 65%, rgba(255,255,255,0.8), transparent),
+        radial-gradient(1.5px 1.5px at 50% 15%, white, transparent),
+        radial-gradient(1px 1px at 70% 40%, rgba(255,255,255,0.7), transparent),
+        radial-gradient(2px 2px at 85% 75%, white, transparent),
+        radial-gradient(1px 1px at 15% 80%, rgba(255,255,255,0.6), transparent),
+        radial-gradient(1.5px 1.5px at 40% 50%, white, transparent),
+        radial-gradient(1px 1px at 90% 10%, rgba(255,255,255,0.9), transparent);
+      opacity: 0.55;
+      animation: twinkleStars 8s ease-in-out infinite alternate;
+    }
+    @keyframes twinkleStars { 0% { opacity: 0.4; } 100% { opacity: 0.7; } }
+
+    .sidebar {
+      width: 280px;
+      background: var(--bg-panel);
+      backdrop-filter: blur(24px);
+      border-right: 1px solid rgba(255,255,255,0.06);
+      display: flex;
+      flex-direction: column;
+      z-index: 10;
+      position: relative;
+    }
+    .sidebar-header {
+      padding: 18px 16px;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .logo-container {
+      width: 42px; height: 42px;
+      position: relative;
+      flex-shrink: 0;
+    }
+    .logo-svg { width: 100%; height: 100%; overflow: visible; }
+    .logo-blue { fill: url(#logoBlueGrad); filter: drop-shadow(0 0 3px rgba(55,118,171,0.9)); }
+    .logo-yellow { fill: url(#logoYellowGrad); filter: drop-shadow(0 0 3px rgba(255,212,59,0.9)); }
+    .logo-orbit {
+      position: absolute; top: 50%; left: 50%;
+      border-radius: 50%; border: 1.5px solid;
+      pointer-events: none;
+    }
+    .logo-orbit-1 {
+      width: 52px; height: 28px;
+      border-color: rgba(100,180,255,0.5);
+      animation: logoSpin1 8s linear infinite;
+    }
+    .logo-orbit-2 {
+      width: 44px; height: 24px;
+      border-color: rgba(255,120,220,0.4);
+      animation: logoSpin2 6s linear infinite reverse;
+    }
+    @keyframes logoSpin1 { from { transform: translate(-50%,-50%) rotateX(65deg) rotateZ(0deg); } to { transform: translate(-50%,-50%) rotateX(65deg) rotateZ(360deg); } }
+    @keyframes logoSpin2 { from { transform: translate(-50%,-50%) rotateX(60deg) rotateZ(0deg); } to { transform: translate(-50%,-50%) rotateX(60deg) rotateZ(-360deg); } }
+
+    .logo-text {
+      font-size: 1.1rem; font-weight: 600;
+      background: linear-gradient(135deg, #e0f2fe 0%, #a5b4fc 50%, #c4b5fd 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .logo-sub { font-size: 0.7rem; color: var(--text-secondary); }
+
+    .new-chat-btn {
+      margin: 12px 12px 8px;
+      padding: 11px 14px;
+      background: linear-gradient(135deg, rgba(79,195,255,0.15), rgba(167,139,250,0.12));
+      border: 1px solid rgba(79,195,255,0.3);
+      border-radius: 12px;
+      color: var(--text-primary);
+      font-size: 0.9rem; font-weight: 500;
+      cursor: pointer;
+      display: flex; align-items: center; gap: 10px;
+      transition: all 0.25s;
+      font-family: inherit;
+    }
+    .new-chat-btn:hover {
+      background: linear-gradient(135deg, rgba(79,195,255,0.25), rgba(167,139,250,0.2));
+      border-color: rgba(79,195,255,0.5);
+      box-shadow: 0 0 18px rgba(79,195,255,0.15);
+    }
+    .new-chat-btn svg { width: 18px; height: 18px; stroke: var(--accent-blue); }
+
+    .chat-list {
+      flex: 1; overflow-y: auto;
+      padding: 6px 10px;
+      display: flex; flex-direction: column; gap: 3px;
+    }
+    .chat-item {
+      padding: 10px 12px;
+      border-radius: 10px;
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all 0.2s;
+      border: 1px solid transparent;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      position: relative;
+    }
+    .chat-item-title {
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .chat-item:hover { background: rgba(255,255,255,0.04); color: var(--text-primary); }
+    .chat-item.active {
+      background: rgba(79,195,255,0.1);
+      color: var(--text-primary);
+      border-color: rgba(79,195,255,0.2);
+    }
+    .chat-item-menu-btn {
+      width: 26px; height: 26px; border-radius: 6px;
+      border: none; background: transparent;
+      color: var(--text-secondary); cursor: pointer;
+      display: none; align-items: center; justify-content: center;
+      flex-shrink: 0; font-size: 1.15rem; line-height: 1;
+      transition: all 0.15s; padding: 0;
+    }
+    .chat-item:hover .chat-item-menu-btn,
+    .chat-item-menu-btn.open { display: flex; }
+    .chat-item-menu-btn:hover { background: rgba(255,255,255,0.1); color: white; }
+    .chat-item-dropdown {
+      position: absolute; right: 6px; top: calc(100% + 2px);
+      background: rgba(18,20,36,0.98);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 10px; padding: 5px;
+      min-width: 138px;
+      box-shadow: 0 10px 28px rgba(0,0,0,0.5);
+      z-index: 60; display: none; flex-direction: column; gap: 2px;
+    }
+    .chat-item-dropdown.open { display: flex; }
+    .chat-item-dropdown button {
+      background: transparent; border: none;
+      color: var(--text-primary); font-size: 0.84rem;
+      padding: 9px 12px; border-radius: 7px;
+      cursor: pointer; text-align: left; font-family: inherit;
+      transition: background 0.15s;
+    }
+    .chat-item-dropdown button:hover { background: rgba(255,255,255,0.08); }
+    .chat-item-dropdown button.danger { color: #f87171; }
+    .chat-item-dropdown button.danger:hover { background: rgba(248,113,113,0.12); }
+
+    .sidebar-footer {
+      padding: 12px 14px;
+      border-top: 1px solid rgba(255,255,255,0.05);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+    }
+    .sidebar-user-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .user-avatar {
+      width: 32px; height: 32px; border-radius: 50%;
+      background: linear-gradient(135deg, #6366f1, #a855f7);
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 600; font-size: 0.85rem; color: white;
+      flex-shrink: 0;
+    }
+    .sidebar-settings {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .sidebar-setting-btn {
+      width: 100%;
+      padding: 9px 12px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 10px;
+      color: var(--text-secondary);
+      font-size: 0.8rem;
+      font-family: inherit;
+      cursor: pointer;
+      text-align: left;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .sidebar-setting-btn:hover {
+      background: rgba(255,255,255,0.07);
+      color: var(--text-primary);
+      border-color: rgba(255,255,255,0.12);
+    }
+    .sidebar-setting-btn.danger {
+      color: #f87171;
+      border-color: rgba(248,113,113,0.15);
+    }
+    .sidebar-setting-btn.danger:hover {
+      background: rgba(248,113,113,0.1);
+      border-color: rgba(248,113,113,0.3);
+    }
+    .lang-picker {
+      display: none;
+      flex-direction: column;
+      gap: 3px;
+      margin-top: 2px;
+      padding: 6px;
+      background: rgba(10,12,24,0.95);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 10px;
+    }
+    .lang-picker.open { display: flex; }
+    .lang-picker button {
+      background: transparent;
+      border: none;
+      color: var(--text-secondary);
+      font-size: 0.8rem;
+      padding: 8px 10px;
+      border-radius: 7px;
+      cursor: pointer;
+      text-align: left;
+      font-family: inherit;
+      transition: all 0.15s;
+    }
+    .lang-picker button:hover,
+    .lang-picker button.active {
+      background: rgba(79,195,255,0.12);
+      color: var(--text-primary);
+    }
+
+    .main {
+      flex: 1; display: flex; flex-direction: column;
+      position: relative; z-index: 5; min-width: 0;
+    }
+    .chat-header {
+      padding: 14px 24px;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      background: rgba(5,5,16,0.4);
+      backdrop-filter: blur(12px);
+    }
+    .chat-title {
+      font-size: 1rem;
+      font-weight: 500;
+      flex: 1;
+      min-width: 0;
+    }
+    .chat-status {
+      font-size: 0.8rem; color: var(--accent-blue);
+      display: flex; align-items: center; gap: 6px;
+    }
+    .status-dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: #34d399; box-shadow: 0 0 8px #34d399;
+      animation: pulseDot 2s ease-in-out infinite;
+    }
+    @keyframes pulseDot { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+    .messages {
+      flex: 1; overflow-y: auto;
+      padding: 24px 0;
+      display: flex; flex-direction: column; gap: 20px;
+    }
+
+    .message {
+      max-width: 760px; width: 100%;
+      margin: 0 auto; padding: 0 24px;
+      display: flex; gap: 12px;
+      animation: msgIn 0.35s ease-out;
+    }
+    .message.user {
+      flex-direction: row-reverse;
+    }
+    @keyframes msgIn {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .message-avatar {
+      width: 34px; height: 34px; border-radius: 10px;
+      flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.85rem; font-weight: 600;
+    }
+    .message.user .message-avatar {
+      background: linear-gradient(135deg, #6366f1, #8b5cf6); color: white;
+    }
+    .message.assistant .message-avatar {
+      background: linear-gradient(135deg, #0ea5e9, #6366f1); color: white;
+      box-shadow: 0 0 12px rgba(14,165,233,0.35);
+    }
+    .message-content {
+      max-width: 75%;
+      display: flex;
+      flex-direction: column;
+    }
+    .message.user .message-content { align-items: flex-end; }
+    .message.assistant .message-content { align-items: flex-start; }
+
+    .message-role {
+      font-size: 0.75rem; font-weight: 600;
+      margin-bottom: 5px; color: var(--text-secondary);
+      padding: 0 4px;
+    }
+    .message.assistant .message-role { color: var(--accent-blue); }
+
+    .message-bubble {
+      padding: 12px 16px;
+      border-radius: 16px;
+      font-size: 0.95rem;
+      line-height: 1.6;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .message.user .message-bubble {
+      background: linear-gradient(135deg, rgba(99,102,241,0.35), rgba(139,92,246,0.28));
+      border: 1px solid rgba(139,92,246,0.25);
+      color: #e8eaf6;
+      border-bottom-right-radius: 4px;
+    }
+    .message.assistant .message-bubble {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: var(--text-primary);
+      border-bottom-left-radius: 4px;
+    }
+
+    .typing-indicator {
+      display: flex; gap: 5px; padding: 8px 0;
+    }
+    .typing-indicator span {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: var(--accent-blue);
+      animation: typingBounce 1.2s infinite ease-in-out;
+    }
+    .typing-indicator span:nth-child(2) { animation-delay: 0.15s; }
+    .typing-indicator span:nth-child(3) { animation-delay: 0.3s; }
+    @keyframes typingBounce {
+      0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+      30% { transform: translateY(-6px); opacity: 1; }
+    }
+
+    .empty-state {
+      flex: 1; display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 14px; padding: 40px; text-align: center;
+    }
+    .empty-icon {
+      width: 72px; height: 72px; border-radius: 20px;
+      background: linear-gradient(135deg, rgba(79,195,255,0.15), rgba(167,139,250,0.15));
+      border: 1px solid rgba(79,195,255,0.25);
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 6px;
+      box-shadow: 0 0 36px rgba(79,195,255,0.12);
+    }
+    .empty-icon svg { width: 36px; height: 36px; stroke: var(--accent-blue); }
+    .empty-title {
+      font-size: 1.35rem; font-weight: 600;
+      background: linear-gradient(135deg, #e0f2fe, #c4b5fd);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .empty-desc {
+      font-size: 0.95rem; color: var(--text-secondary);
+      max-width: 360px; line-height: 1.5;
+    }
+    .suggestions {
+      display: flex; flex-wrap: wrap; gap: 10px;
+      margin-top: 18px; justify-content: center; max-width: 540px;
+    }
+    .suggestion {
+      padding: 10px 15px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 12px;
+      font-size: 0.85rem; color: var(--text-secondary);
+      cursor: pointer; transition: all 0.2s;
+    }
+    .suggestion:hover {
+      background: rgba(79,195,255,0.1);
+      border-color: rgba(79,195,255,0.3);
+      color: var(--text-primary);
+      transform: translateY(-2px);
+    }
+
+    .input-area {
+      padding: 14px 24px 20px;
+      background: linear-gradient(to top, rgba(5,5,16,0.95), transparent);
+    }
+    .input-wrapper {
+      max-width: 760px; margin: 0 auto;
+      display: flex; align-items: flex-end; gap: 10px;
+      background: var(--bg-input);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 18px;
+      padding: 10px 12px 10px 18px;
+      box-shadow: 0 0 0 1px rgba(79,195,255,0.05), 0 8px 32px rgba(0,0,0,0.4);
+      transition: all 0.3s;
+    }
+    .input-wrapper:focus-within {
+      border-color: rgba(79,195,255,0.4);
+      box-shadow: 0 0 0 1px rgba(79,195,255,0.15), 0 0 28px rgba(79,195,255,0.12), 0 8px 32px rgba(0,0,0,0.4);
+    }
+    .chat-input {
+      flex: 1; background: transparent; border: none; outline: none;
+      color: var(--text-primary); font-size: 0.95rem; font-family: inherit;
+      line-height: 1.5; max-height: 140px; min-height: 24px;
+      resize: none; padding: 6px 0;
+    }
+    .chat-input::placeholder { color: var(--text-secondary); opacity: 0.7; }
+
+    .send-btn {
+      width: 42px; height: 42px; border-radius: 13px; border: none;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      position: relative; overflow: hidden;
+      background: linear-gradient(135deg, #0ea5e9 0%, #6366f1 50%, #a855f7 100%);
+      box-shadow: 0 0 18px rgba(99,102,241,0.4), 0 4px 12px rgba(0,0,0,0.3);
+      transition: all 0.3s cubic-bezier(0.22,1,0.36,1);
+      flex-shrink: 0;
+    }
+    .send-btn:hover {
+      transform: scale(1.08) translateY(-2px);
+      box-shadow: 0 0 28px rgba(99,102,241,0.6), 0 0 45px rgba(168,85,247,0.25);
+    }
+    .send-btn:active { transform: scale(0.95); }
+    .send-btn svg { width: 18px; height: 18px; stroke: white; stroke-width: 2.2; }
+
+    .input-hint {
+      text-align: center; font-size: 0.72rem;
+      color: var(--text-secondary); opacity: 0.55; margin-top: 8px;
+    }
+
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+
+    /* Mobile menu button */
+    .mobile-menu-btn {
+      display: none;
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.1);
+      background: rgba(255,255,255,0.06);
+      color: var(--text-primary);
+      cursor: pointer;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: all 0.2s;
+    }
+    .mobile-menu-btn:hover {
+      background: rgba(255,255,255,0.1);
+    }
+    .mobile-menu-btn svg {
+      width: 22px;
+      height: 22px;
+    }
+
+    .sidebar-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.55);
+      z-index: 15;
+      opacity: 0;
+      transition: opacity 0.25s;
+    }
+    .sidebar-overlay.visible {
+      display: block;
+      opacity: 1;
+    }
+
+    /* ========== RESPONSIVE ========== */
+    @media (max-width: 860px) {
+      .mobile-menu-btn { display: flex; }
+
+      .sidebar {
+        position: fixed;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        z-index: 20;
+        transform: translateX(-105%);
+        transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+        box-shadow: 8px 0 40px rgba(0,0,0,0.4);
+        width: min(300px, 85vw);
+      }
+      .sidebar.open {
+        transform: translateX(0);
+      }
+
+      .message {
+        padding: 0 14px;
+      }
+      .message-content {
+        max-width: 85%;
+      }
+      .input-area {
+        padding: 12px 14px 16px;
+      }
+      .input-wrapper {
+        max-width: 100%;
+        border-radius: 16px;
+      }
+      .chat-header {
+        padding: 12px 14px;
+        gap: 10px;
+      }
+      .chat-title {
+        font-size: 0.95rem;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .empty-state {
+        padding: 24px 16px;
+      }
+      .suggestions {
+        max-width: 100%;
+      }
+      .suggestion {
+        font-size: 0.8rem;
+        padding: 9px 12px;
+      }
+      .setup-card {
+        padding: 28px 20px;
+        margin: 12px;
+        max-width: 100%;
+      }
+      .get-started-btn {
+        padding: 14px 32px;
+        font-size: 1rem;
+      }
+      .stage {
+        width: min(92vw, 400px);
+        height: min(92vw, 400px);
+      }
+      .logo-wrapper {
+        width: 220px;
+        height: 220px;
+      }
+    }
+
+    @media (max-width: 400px) {
+      .message-bubble {
+        font-size: 0.9rem;
+        padding: 10px 13px;
+      }
+      .sidebar {
+        width: 90vw;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ========== INTRO SCREEN ========== -->
+  <div id="intro-screen" class="screen active">
+    <div class="stage" id="logoStage">
+      <div class="ambient"></div>
+      <div class="glow-ring ring1"></div>
+      <div class="glow-ring ring2"></div>
+      <div class="orbit orbit1"></div>
+      <div class="orbit orbit2"></div>
+      <div class="orbit orbit3"></div>
+
+      <div class="logo-wrapper">
+        <svg class="python-logo" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="blueGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#5A9FD4"/>
+              <stop offset="50%" stop-color="#3776AB"/>
+              <stop offset="100%" stop-color="#2A5F8F"/>
+            </linearGradient>
+            <linearGradient id="yellowGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#FFE873"/>
+              <stop offset="50%" stop-color="#FFD43B"/>
+              <stop offset="100%" stop-color="#E8B800"/>
+            </linearGradient>
+          </defs>
+          <path class="trail-blue" d="M116 296c0-30.328 24.672-55 55-55h170c13.785 0 25-11.215 25-25V75c0-41.355-33.645-75-75-75h-70c-41.355 0-75 33.645-75 75v41h110c8.285 0 15 6.715 15 15s-6.715 15-15 15H55c-41.355 0-75 33.645-75 75v70c0 41.355 33.645 75 75 75h41zm105-220c-8.285 0-15-6.715-15-15s6.715-15 15-15 15 6.715 15 15-6.715 15-15 15z"/>
+          <path class="trail-yellow" d="M437 146h-41v70c0 30.328-24.672 55-55 55H171c-13.785 0-25 11.215-25 25v141c0 41.355 33.645 75 75 75h70c41.355 0 75-33.645 75-75v-41H255c-8.285 0-15-6.715-15-15s6.715-15 15-15h181c41.355 0 75-33.645 75-75v-70c0-41.355-33.645-75-75-75zm-146 290c8.285 0 15 6.715 15 15s-6.715 15-15 15-15-6.715-15-15 6.715-15 15-15z"/>
+          <path class="blue-snake" d="M116 296c0-30.328 24.672-55 55-55h170c13.785 0 25-11.215 25-25V75c0-41.355-33.645-75-75-75h-70c-41.355 0-75 33.645-75 75v41h110c8.285 0 15 6.715 15 15s-6.715 15-15 15H55c-41.355 0-75 33.645-75 75v70c0 41.355 33.645 75 75 75h41zm105-220c-8.285 0-15-6.715-15-15s6.715-15 15-15 15 6.715 15 15-6.715 15-15 15z"/>
+          <path class="yellow-snake" d="M437 146h-41v70c0 30.328-24.672 55-55 55H171c-13.785 0-25 11.215-25 25v141c0 41.355 33.645 75 75 75h70c41.355 0 75-33.645 75-75v-41H255c-8.285 0-15-6.715-15-15s6.715-15 15-15h181c41.355 0 75-33.645 75-75v-70c0-41.355-33.645-75-75-75zm-146 290c8.285 0 15 6.715 15 15s-6.715 15-15 15-15-6.715-15-15 6.715-15 15-15z"/>
+          <circle class="eye" cx="221" cy="91" r="15"/>
+          <circle class="eye" cx="291" cy="421" r="15"/>
+        </svg>
+      </div>
+    </div>
+
+    <div class="get-started-wrap" id="getStartedWrap">
+      <button class="get-started-btn" id="getStartedBtn">GET STARTED</button>
+    </div>
+  </div>
+
+  <!-- ========== SETUP SCREEN ========== -->
+  <div id="setup-screen" class="screen">
+    <div class="setup-card">
+      <div class="setup-progress">
+        <div class="setup-dot active" data-step="0"></div>
+        <div class="setup-dot" data-step="1"></div>
+        <div class="setup-dot" data-step="2"></div>
+        <div class="setup-dot" data-step="3"></div>
+        <div class="setup-dot" data-step="4"></div>
+      </div>
+
+      <!-- Step 0: Language -->
+      <div class="setup-step active" data-step="0">
+        <div class="setup-title" data-i18n="setup_lang_title">Choose your language</div>
+        <div class="setup-desc" data-i18n="setup_lang_desc">Select the interface language. You can change it later.</div>
+        <div class="setup-options" id="langOptions">
+          <div class="setup-option selected" data-value="en">🇬🇧 English</div>
+          <div class="setup-option" data-value="uk">🇺🇦 Українська</div>
+          <div class="setup-option" data-value="ru">🇷🇺 Русский</div>
+          <div class="setup-option" data-value="pl">🇵🇱 Polski</div>
+          <div class="setup-option" data-value="de">🇩🇪 Deutsch</div>
+          <div class="setup-option" data-value="es">🇪🇸 Español</div>
+          <div class="setup-option" data-value="fr">🇫🇷 Français</div>
+        </div>
+      </div>
+
+      <!-- Step 1: Name -->
+      <div class="setup-step" data-step="1">
+        <div class="setup-title" data-i18n="setup_welcome_title">Welcome to PythoAI</div>
+        <div class="setup-desc" data-i18n="setup_welcome_desc">Let's set a few things up so it feels comfortable.</div>
+        <label style="font-size:0.85rem;color:var(--text-secondary);margin-bottom:6px;display:block;" data-i18n="setup_name_label">What should I call you?</label>
+        <input type="text" class="setup-input" id="setupUsername" placeholder="Your name" maxlength="24">
+      </div>
+
+      <!-- Step 2: Style -->
+      <div class="setup-step" data-step="2">
+        <div class="setup-title" data-i18n="setup_style_title">Conversation style</div>
+        <div class="setup-desc" data-i18n="setup_style_desc">How should PythoAI talk to you?</div>
+        <div class="setup-options" id="styleOptions">
+          <div class="setup-option selected" data-value="friendly" data-i18n="style_friendly">Friendly & fun</div>
+          <div class="setup-option" data-value="neutral" data-i18n="style_neutral">Neutral & clear</div>
+          <div class="setup-option" data-value="formal" data-i18n="style_formal">More formal</div>
+        </div>
+      </div>
+
+      <!-- Step 3: Memory -->
+      <div class="setup-step" data-step="3">
+        <div class="setup-title" data-i18n="setup_memory_title">Memory</div>
+        <div class="setup-desc" data-i18n="setup_memory_desc">PythoAI can remember things you tell it. Enable?</div>
+        <div class="setup-options" id="memoryOptions">
+          <div class="setup-option selected" data-value="on" data-i18n="memory_on">Yes, remember</div>
+          <div class="setup-option" data-value="off" data-i18n="memory_off">No, not for now</div>
+        </div>
+      </div>
+
+      <!-- Step 4: Done -->
+      <div class="setup-step" data-step="4">
+        <div class="setup-title" data-i18n="setup_done_title">All set!</div>
+        <div class="setup-desc" data-i18n="setup_done_desc">Settings saved. You can change them later with commands.</div>
+        <div style="background:rgba(79,195,255,0.08);border:1px solid rgba(79,195,255,0.2);border-radius:12px;padding:16px;margin-bottom:8px;font-size:0.9rem;line-height:1.6;">
+          <div><span data-i18n="summary_lang">Language</span>: <strong id="summaryLang">English</strong></div>
+          <div><span data-i18n="summary_name">Name</span>: <strong id="summaryName">User</strong></div>
+          <div><span data-i18n="summary_style">Style</span>: <strong id="summaryStyle">Friendly</strong></div>
+          <div><span data-i18n="summary_memory">Memory</span>: <strong id="summaryMemory">On</strong></div>
+        </div>
+      </div>
+
+      <div class="setup-nav">
+        <button class="setup-btn secondary" id="setupBack" style="display:none;" data-i18n="btn_back">Back</button>
+        <button class="setup-btn primary" id="setupNext" data-i18n="btn_next">Next</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== CHAT SCREEN ========== -->
+  <div id="chat-screen" class="screen">
+    <div class="cosmos"><div class="stars"></div></div>
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="logo-container">
+          <div class="logo-orbit logo-orbit-1"></div>
+          <div class="logo-orbit logo-orbit-2"></div>
+          <svg class="logo-svg" viewBox="0 0 512 512">
+            <defs>
+              <linearGradient id="logoBlueGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#5A9FD4"/><stop offset="100%" stop-color="#2A5F8F"/>
+              </linearGradient>
+              <linearGradient id="logoYellowGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#FFE873"/><stop offset="100%" stop-color="#E8B800"/>
+              </linearGradient>
+            </defs>
+            <path class="logo-blue" d="M116 296c0-30.328 24.672-55 55-55h170c13.785 0 25-11.215 25-25V75c0-41.355-33.645-75-75-75h-70c-41.355 0-75 33.645-75 75v41h110c8.285 0 15 6.715 15 15s-6.715 15-15 15H55c-41.355 0-75 33.645-75 75v70c0 41.355 33.645 75 75 75h41zm105-220c-8.285 0-15-6.715-15-15s6.715-15 15-15 15 6.715 15 15-6.715 15-15 15z"/>
+            <path class="logo-yellow" d="M437 146h-41v70c0 30.328-24.672 55-55 55H171c-13.785 0-25 11.215-25 25v141c0 41.355 33.645 75 75 75h70c41.355 0 75-33.645 75-75v-41H255c-8.285 0-15-6.715-15-15s6.715-15 15-15h181c41.355 0 75-33.645 75-75v-70c0-41.355-33.645-75-75-75zm-146 290c8.285 0 15 6.715 15 15s-6.715 15-15 15-15-6.715-15-15 6.715-15 15-15z"/>
+            <circle cx="221" cy="91" r="15" fill="#fff"/>
+            <circle cx="291" cy="421" r="15" fill="#fff"/>
+          </svg>
+        </div>
+        <div>
+          <div class="logo-text">PythoAI</div>
+          <div class="logo-sub">Cosmic Edition</div>
+        </div>
+      </div>
+
+      <button class="new-chat-btn" id="newChatBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+        Новий чат
+      </button>
+
+      <div class="chat-list" id="chatList"></div>
+
+      <div class="sidebar-footer">
+        <div class="sidebar-user-row">
+          <div class="user-avatar" id="userAvatar">U</div>
+          <div>
+            <div style="font-weight:500;color:var(--text-primary);font-size:0.85rem;" id="sidebarUsername">User</div>
+            <div style="font-size:0.75rem;" id="sidebarPlan">Free plan</div>
+          </div>
+        </div>
+        <div class="sidebar-settings">
+          <button class="sidebar-setting-btn" id="langBtn">
+            <span id="langBtnLabel">Language — English</span>
+            <span>▾</span>
+          </button>
+          <div class="lang-picker" id="langPicker">
+            <button data-lang="en">🇬🇧 English</button>
+            <button data-lang="uk">🇺🇦 Українська</button>
+            <button data-lang="ru">🇷🇺 Русский</button>
+            <button data-lang="pl">🇵🇱 Polski</button>
+            <button data-lang="de">🇩🇪 Deutsch</button>
+            <button data-lang="es">🇪🇸 Español</button>
+            <button data-lang="fr">🇫🇷 Français</button>
+          </div>
+          <button class="sidebar-setting-btn danger" id="resetBtn">
+            <span id="resetBtnLabel">Reset all data</span>
+          </button>
+        </div>
+      </div>
+    </aside>
+
+    <main class="main">
+      <div class="chat-header">
+        <button class="mobile-menu-btn" id="mobileMenuBtn" title="Menu" aria-label="Open menu">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <path d="M4 6h16M4 12h16M4 18h16"/>
+          </svg>
+        </button>
+        <div class="chat-title" id="chatTitle">Новий чат</div>
+        <div class="chat-status"><span class="status-dot"></span> Online</div>
+      </div>
+
+      <div class="messages" id="messages">
+        <div class="empty-state" id="emptyState">
+          <div class="empty-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
+            </svg>
+          </div>
+          <div class="empty-title">Привіт! Я PythoAI</div>
+          <div class="empty-desc">Задай будь-яке питання — допоможу з кодом, ідеями, іграми та всім іншим.</div>
+          <div class="suggestions">
+            <div class="suggestion" data-text="/help">📋 /help — команди</div>
+            <div class="suggestion" data-text="tell me a joke">😂 Жарт</div>
+            <div class="suggestion" data-text="/playguess">🎲 Вгадай число</div>
+            <div class="suggestion" data-text="what time is it">🕐 Котра година?</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="input-area">
+        <div class="input-wrapper">
+          <textarea class="chat-input" id="chatInput" placeholder="Напиши повідомлення..." rows="1"></textarea>
+          <button class="send-btn" id="sendBtn" title="Надіслати">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 2L11 13"/><path d="M22 2L15 22L11 13L2 9L22 2Z"/>
+            </svg>
+          </button>
+        </div>
+        <div class="input-hint">Enter — надіслати · Shift+Enter — новий рядок</div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    // ===================== STATE & STORAGE =====================
+    const storage = {
+      get(key, def = null) {
+        try {
+          const v = localStorage.getItem('pythoai_' + key);
+          return v !== null ? JSON.parse(v) : def;
+        } catch { return def; }
+      },
+      set(key, val) {
+        try { localStorage.setItem('pythoai_' + key, JSON.stringify(val)); } catch {}
+      }
+    };
+
+    let state = {
+      username: storage.get('username', 'User'),
+      lang: storage.get('lang', 'en'),
+      style: storage.get('style', 'friendly'),
+      memoryEnabled: storage.get('memoryEnabled', true),
+      setupDone: storage.get('setupDone', false),
+      memories: storage.get('memories', []),
+      easterEggs: storage.get('easterEggs', 0),
+      messageCount: storage.get('messageCount', 0),
+      copycatMode: false,
+      chats: storage.get('chats', []),
+      currentChatId: storage.get('currentChatId', null),
+      // game stats
+      guessWins: storage.get('guessWins', 0),
+      guessMisses: storage.get('guessMisses', 0),
+      dicePoints: storage.get('dicePoints', 0),
+      coinFlips: storage.get('coinFlips', 0),
+      rpsWins: storage.get('rpsWins', 0),
+      rpsLoses: storage.get('rpsLoses', 0),
+      triviaEasy: storage.get('triviaEasy', 0),
+      triviaMedium: storage.get('triviaMedium', 0),
+      triviaHard: storage.get('triviaHard', 0),
+      // game active states
+      activeGame: null,
+      gameData: {}
+    };
+
+    function saveState() {
+      storage.set('username', state.username);
+      storage.set('lang', state.lang);
+      storage.set('style', state.style);
+      storage.set('memoryEnabled', state.memoryEnabled);
+      storage.set('setupDone', state.setupDone);
+      storage.set('memories', state.memories);
+      storage.set('easterEggs', state.easterEggs);
+      storage.set('messageCount', state.messageCount);
+      storage.set('chats', state.chats);
+      storage.set('currentChatId', state.currentChatId);
+      storage.set('guessWins', state.guessWins);
+      storage.set('guessMisses', state.guessMisses);
+      storage.set('dicePoints', state.dicePoints);
+      storage.set('coinFlips', state.coinFlips);
+      storage.set('rpsWins', state.rpsWins);
+      storage.set('rpsLoses', state.rpsLoses);
+      storage.set('triviaEasy', state.triviaEasy);
+      storage.set('triviaMedium', state.triviaMedium);
+      storage.set('triviaHard', state.triviaHard);
+    }
+
+    // ===================== i18n =====================
+    const translations = {
+      en: {
+        setup_lang_title: 'Choose your language',
+        setup_lang_desc: 'Select the interface language. You can change it later.',
+        setup_welcome_title: 'Welcome to PythoAI',
+        setup_welcome_desc: "Let's set a few things up so it feels comfortable.",
+        setup_name_label: 'What should I call you?',
+        setup_style_title: 'Conversation style',
+        setup_style_desc: 'How should PythoAI talk to you?',
+        style_friendly: 'Friendly & fun',
+        style_neutral: 'Neutral & clear',
+        style_formal: 'More formal',
+        setup_memory_title: 'Memory',
+        setup_memory_desc: 'PythoAI can remember things you tell it. Enable?',
+        memory_on: 'Yes, remember',
+        memory_off: 'No, not for now',
+        setup_done_title: 'All set!',
+        setup_done_desc: 'Settings saved. You can change them later with commands.',
+        summary_lang: 'Language', summary_name: 'Name', summary_style: 'Style', summary_memory: 'Memory',
+        btn_back: 'Back', btn_next: 'Next', btn_start: 'Start',
+        new_chat: 'New chat', online: 'Online',
+        empty_title: 'Hi! I am PythoAI',
+        empty_desc: 'Ask me anything — code, ideas, games and more.',
+        placeholder: 'Write a message...',
+        hint: 'Enter — send · Shift+Enter — new line',
+        free_plan: 'Free plan',
+        rename: 'Rename', delete: 'Delete',
+        language: 'Language',
+        reset_data: 'Reset all data',
+        reset_confirm: 'This will delete everything: chats, memory, settings, stats.\n\nAre you sure?',
+        reset_done: 'All data has been reset.',
+        lang_name: { en: 'English', uk: 'Українська', ru: 'Русский', pl: 'Polski', de: 'Deutsch', es: 'Español', fr: 'Français' }
+      },
+      uk: {
+        setup_lang_title: 'Обери мову',
+        setup_lang_desc: 'Вибери мову інтерфейсу. Пізніше можна змінити.',
+        setup_welcome_title: 'Ласкаво просимо в PythoAI',
+        setup_welcome_desc: 'Давай трохи налаштуємо все, щоб тобі було зручно.',
+        setup_name_label: "Як тебе звати?",
+        setup_style_title: 'Стиль спілкування',
+        setup_style_desc: 'Як PythoAI має з тобою говорити?',
+        style_friendly: 'Дружній і веселий',
+        style_neutral: 'Нейтральний і чіткий',
+        style_formal: 'Більш формальний',
+        setup_memory_title: "Пам'ять",
+        setup_memory_desc: "PythoAI може запам'ятовувати речі, які ти йому скажеш. Увімкнути?",
+        memory_on: "Так, запам'ятовуй",
+        memory_off: 'Ні, поки що не треба',
+        setup_done_title: 'Все готово!',
+        setup_done_desc: 'Налаштування збережено. Можеш змінювати їх пізніше через команди.',
+        summary_lang: 'Мова', summary_name: "Ім'я", summary_style: 'Стиль', summary_memory: "Пам'ять",
+        btn_back: 'Назад', btn_next: 'Далі', btn_start: 'Почати',
+        new_chat: 'Новий чат', online: 'Онлайн',
+        empty_title: 'Привіт! Я PythoAI',
+        empty_desc: 'Задай будь-яке питання — допоможу з кодом, ідеями, іграми та всім іншим.',
+        placeholder: 'Напиши повідомлення...',
+        hint: 'Enter — надіслати · Shift+Enter — новий рядок',
+        free_plan: 'Безкоштовний план',
+        rename: 'Перейменувати', delete: 'Видалити',
+        language: 'Мова',
+        reset_data: 'Скинути всі дані',
+        reset_confirm: 'Це видалить УСЕ: чати, пам\'ять, налаштування, статистику.\n\nТи впевнений?',
+        reset_done: 'Усі дані скинуто.',
+        lang_name: { en: 'English', uk: 'Українська', ru: 'Русский', pl: 'Polski', de: 'Deutsch', es: 'Español', fr: 'Français' }
+      },
+      ru: {
+        setup_lang_title: 'Выбери язык',
+        setup_lang_desc: 'Выбери язык интерфейса. Позже можно изменить.',
+        setup_welcome_title: 'Добро пожаловать в PythoAI',
+        setup_welcome_desc: 'Давай немного настроим всё, чтобы тебе было удобно.',
+        setup_name_label: 'Как тебя зовут?',
+        setup_style_title: 'Стиль общения',
+        setup_style_desc: 'Как PythoAI должен с тобой говорить?',
+        style_friendly: 'Дружелюбный и весёлый',
+        style_neutral: 'Нейтральный и чёткий',
+        style_formal: 'Более формальный',
+        setup_memory_title: 'Память',
+        setup_memory_desc: 'PythoAI может запоминать то, что ты ему скажешь. Включить?',
+        memory_on: 'Да, запоминай',
+        memory_off: 'Нет, пока не надо',
+        setup_done_title: 'Всё готово!',
+        setup_done_desc: 'Настройки сохранены. Можно менять их позже через команды.',
+        summary_lang: 'Язык', summary_name: 'Имя', summary_style: 'Стиль', summary_memory: 'Память',
+        btn_back: 'Назад', btn_next: 'Далее', btn_start: 'Начать',
+        new_chat: 'Новый чат', online: 'Онлайн',
+        empty_title: 'Привет! Я PythoAI',
+        empty_desc: 'Задай любой вопрос — помогу с кодом, идеями, играми и всем остальным.',
+        placeholder: 'Напиши сообщение...',
+        hint: 'Enter — отправить · Shift+Enter — новая строка',
+        free_plan: 'Бесплатный план',
+        rename: 'Переименовать', delete: 'Удалить',
+        language: 'Язык',
+        reset_data: 'Сбросить все данные',
+        reset_confirm: 'Это удалит ВСЁ: чаты, память, настройки, статистику.\n\nТы уверен?',
+        reset_done: 'Все данные сброшены.',
+        lang_name: { en: 'English', uk: 'Українська', ru: 'Русский', pl: 'Polski', de: 'Deutsch', es: 'Español', fr: 'Français' }
+      },
+      pl: {
+        setup_lang_title: 'Wybierz język', setup_lang_desc: 'Wybierz język interfejsu.',
+        setup_welcome_title: 'Witaj w PythoAI', setup_welcome_desc: 'Ustawmy kilka rzeczy.',
+        setup_name_label: 'Jak mam cię nazywać?', setup_style_title: 'Styl rozmowy', setup_style_desc: 'Jak PythoAI ma z tobą rozmawiać?',
+        style_friendly: 'Przyjazny i zabawny', style_neutral: 'Neutralny i jasny', style_formal: 'Bardziej formalny',
+        setup_memory_title: 'Pamięć', setup_memory_desc: 'PythoAI może zapamiętywać rzeczy. Włączyć?',
+        memory_on: 'Tak, zapamiętuj', memory_off: 'Nie, na razie nie',
+        setup_done_title: 'Gotowe!', setup_done_desc: 'Ustawienia zapisane.',
+        summary_lang: 'Język', summary_name: 'Imię', summary_style: 'Styl', summary_memory: 'Pamięć',
+        btn_back: 'Wstecz', btn_next: 'Dalej', btn_start: 'Start',
+        new_chat: 'Nowy czat', online: 'Online', empty_title: 'Cześć! Jestem PythoAI',
+        empty_desc: 'Zapytaj o cokolwiek — kod, pomysły, gry.',
+        placeholder: 'Napisz wiadomość...', hint: 'Enter — wyślij · Shift+Enter — nowa linia',
+        free_plan: 'Plan darmowy', rename: 'Zmień nazwę', delete: 'Usuń',
+        language: 'Język', reset_data: 'Resetuj dane', reset_confirm: 'To usunie wszystko. Na pewno?', reset_done: 'Dane zresetowane.',
+        lang_name: { en: 'English', uk: 'Українська', ru: 'Русский', pl: 'Polski', de: 'Deutsch', es: 'Español', fr: 'Français' }
+      },
+      de: {
+        setup_lang_title: 'Sprache wählen', setup_lang_desc: 'Wähle die Interface-Sprache.',
+        setup_welcome_title: 'Willkommen bei PythoAI', setup_welcome_desc: 'Lass uns ein paar Dinge einrichten.',
+        setup_name_label: 'Wie soll ich dich nennen?', setup_style_title: 'Gesprächsstil', setup_style_desc: 'Wie soll PythoAI mit dir sprechen?',
+        style_friendly: 'Freundlich & lustig', style_neutral: 'Neutral & klar', style_formal: 'Formeller',
+        setup_memory_title: 'Speicher', setup_memory_desc: 'PythoAI kann sich Dinge merken. Aktivieren?',
+        memory_on: 'Ja, merken', memory_off: 'Nein, vorerst nicht',
+        setup_done_title: 'Fertig!', setup_done_desc: 'Einstellungen gespeichert.',
+        summary_lang: 'Sprache', summary_name: 'Name', summary_style: 'Stil', summary_memory: 'Speicher',
+        btn_back: 'Zurück', btn_next: 'Weiter', btn_start: 'Start',
+        new_chat: 'Neuer Chat', online: 'Online', empty_title: 'Hallo! Ich bin PythoAI',
+        empty_desc: 'Frag mich alles — Code, Ideen, Spiele.',
+        placeholder: 'Nachricht schreiben...', hint: 'Enter — senden · Shift+Enter — neue Zeile',
+        free_plan: 'Kostenloser Plan', rename: 'Umbenennen', delete: 'Löschen',
+        language: 'Sprache', reset_data: 'Alle Daten löschen', reset_confirm: 'Dies löscht ALLES. Sicher?', reset_done: 'Daten gelöscht.',
+        lang_name: { en: 'English', uk: 'Українська', ru: 'Русский', pl: 'Polski', de: 'Deutsch', es: 'Español', fr: 'Français' }
+      },
+      es: {
+        setup_lang_title: 'Elige tu idioma', setup_lang_desc: 'Selecciona el idioma de la interfaz.',
+        setup_welcome_title: 'Bienvenido a PythoAI', setup_welcome_desc: 'Configuremos algunas cosas.',
+        setup_name_label: '¿Cómo debo llamarte?', setup_style_title: 'Estilo de conversación', setup_style_desc: '¿Cómo debe hablarte PythoAI?',
+        style_friendly: 'Amigable y divertido', style_neutral: 'Neutral y claro', style_formal: 'Más formal',
+        setup_memory_title: 'Memoria', setup_memory_desc: 'PythoAI puede recordar cosas. ¿Activar?',
+        memory_on: 'Sí, recordar', memory_off: 'No, por ahora no',
+        setup_done_title: '¡Listo!', setup_done_desc: 'Configuración guardada.',
+        summary_lang: 'Idioma', summary_name: 'Nombre', summary_style: 'Estilo', summary_memory: 'Memoria',
+        btn_back: 'Atrás', btn_next: 'Siguiente', btn_start: 'Empezar',
+        new_chat: 'Nuevo chat', online: 'En línea', empty_title: '¡Hola! Soy PythoAI',
+        empty_desc: 'Pregúntame lo que quieras — código, ideas, juegos.',
+        placeholder: 'Escribe un mensaje...', hint: 'Enter — enviar · Shift+Enter — nueva línea',
+        free_plan: 'Plan gratuito', rename: 'Renombrar', delete: 'Eliminar',
+        language: 'Idioma', reset_data: 'Borrar todos los datos', reset_confirm: 'Esto eliminará TODO. ¿Seguro?', reset_done: 'Datos borrados.',
+        lang_name: { en: 'English', uk: 'Українська', ru: 'Русский', pl: 'Polski', de: 'Deutsch', es: 'Español', fr: 'Français' }
+      },
+      fr: {
+        setup_lang_title: 'Choisis ta langue', setup_lang_desc: "Sélectionne la langue de l'interface.",
+        setup_welcome_title: 'Bienvenue sur PythoAI', setup_welcome_desc: 'Configurons quelques choses.',
+        setup_name_label: 'Comment dois-je t\'appeler ?', setup_style_title: 'Style de conversation', setup_style_desc: 'Comment PythoAI doit-il te parler ?',
+        style_friendly: 'Amical et amusant', style_neutral: 'Neutre et clair', style_formal: 'Plus formel',
+        setup_memory_title: 'Mémoire', setup_memory_desc: 'PythoAI peut se souvenir des choses. Activer ?',
+        memory_on: 'Oui, se souvenir', memory_off: 'Non, pas pour l\'instant',
+        setup_done_title: 'C\'est prêt !', setup_done_desc: 'Paramètres enregistrés.',
+        summary_lang: 'Langue', summary_name: 'Nom', summary_style: 'Style', summary_memory: 'Mémoire',
+        btn_back: 'Retour', btn_next: 'Suivant', btn_start: 'Commencer',
+        new_chat: 'Nouveau chat', online: 'En ligne', empty_title: 'Salut ! Je suis PythoAI',
+        empty_desc: 'Demande-moi n\'importe quoi — code, idées, jeux.',
+        placeholder: 'Écris un message...', hint: 'Enter — envoyer · Shift+Enter — nouvelle ligne',
+        free_plan: 'Plan gratuit', rename: 'Renommer', delete: 'Supprimer',
+        language: 'Langue', reset_data: 'Tout effacer', reset_confirm: 'Ceci supprimera TOUT. Sûr ?', reset_done: 'Données effacées.',
+        lang_name: { en: 'English', uk: 'Українська', ru: 'Русский', pl: 'Polski', de: 'Deutsch', es: 'Español', fr: 'Français' }
+      }
+    };
+
+    function t(key) {
+      const lang = translations[state.lang] || translations.en;
+      return lang[key] ?? translations.en[key] ?? key;
+    }
+
+    function applyI18n() {
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        const val = t(key);
+        if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
+          el.placeholder = val;
+        } else {
+          el.textContent = val;
+        }
+      });
+      // Specific elements without data-i18n
+      const newChatBtn = document.querySelector('#newChatBtn');
+      if (newChatBtn) {
+        const svg = newChatBtn.querySelector('svg');
+        newChatBtn.innerHTML = '';
+        if (svg) newChatBtn.appendChild(svg);
+        newChatBtn.appendChild(document.createTextNode(' ' + t('new_chat')));
+      }
+      const input = document.getElementById('chatInput');
+      if (input) input.placeholder = t('placeholder');
+      const hint = document.querySelector('.input-hint');
+      if (hint) hint.textContent = t('hint');
+      const emptyTitle = document.querySelector('.empty-title');
+      if (emptyTitle) emptyTitle.textContent = t('empty_title');
+      const emptyDesc = document.querySelector('.empty-desc');
+      if (emptyDesc) emptyDesc.textContent = t('empty_desc');
+      const planEl = document.getElementById('sidebarPlan');
+      if (planEl) planEl.textContent = t('free_plan');
+      const nameInput = document.getElementById('setupUsername');
+      if (nameInput) nameInput.placeholder = t('setup_name_label');
+
+      // Language button label
+      const langNames = t('lang_name') || {};
+      const langBtnLabel = document.getElementById('langBtnLabel');
+      if (langBtnLabel) {
+        langBtnLabel.textContent = `${t('language')} — ${langNames[state.lang] || state.lang}`;
+      }
+      const resetBtnLabel = document.getElementById('resetBtnLabel');
+      if (resetBtnLabel) resetBtnLabel.textContent = t('reset_data');
+
+      // Highlight active language in picker
+      document.querySelectorAll('#langPicker button').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.lang === state.lang);
+      });
+    }
+
+    function generateId() {
+      return 'chat_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+    }
+
+    function createNewChat(title = null) {
+      if (!title) title = t('new_chat');
+      const chat = {
+        id: generateId(),
+        title: title,
+        messages: [],
+        created: Date.now()
+      };
+      state.chats.unshift(chat);
+      state.currentChatId = chat.id;
+      saveState();
+      return chat;
+    }
+
+    function getCurrentChat() {
+      return state.chats.find(c => c.id === state.currentChatId) || null;
+    }
+
+    function ensureChat() {
+      if (!state.chats.length || !state.currentChatId) {
+        createNewChat();
+      }
+      if (!getCurrentChat()) {
+        state.currentChatId = state.chats[0]?.id || createNewChat().id;
+      }
+    }
+
+    // ===================== SCREENS =====================
+    function showScreen(id) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+    }
+
+    // ===================== INTRO =====================
+    setTimeout(() => {
+      document.getElementById('logoStage').classList.add('moved');
+      setTimeout(() => {
+        document.getElementById('getStartedWrap').classList.add('visible');
+      }, 700);
+    }, 4800);
+
+    document.getElementById('getStartedBtn').addEventListener('click', () => {
+      if (state.setupDone) {
+        initChatUI();
+        showScreen('chat-screen');
+      } else {
+        showScreen('setup-screen');
+      }
+    });
+
+    // ===================== SETUP =====================
+    let setupStep = 0;
+    const totalSteps = 5;
+
+    function updateSetupUI() {
+      document.querySelectorAll('.setup-step').forEach(s => s.classList.remove('active'));
+      document.querySelector(`.setup-step[data-step="${setupStep}"]`).classList.add('active');
+      document.querySelectorAll('.setup-dot').forEach((d, i) => {
+        d.classList.toggle('active', i <= setupStep);
+      });
+      document.getElementById('setupBack').style.display = setupStep > 0 ? 'block' : 'none';
+      document.getElementById('setupNext').textContent = setupStep === totalSteps - 1 ? t('btn_start') : t('btn_next');
+      document.getElementById('setupBack').textContent = t('btn_back');
+
+      if (setupStep === 4) {
+        const langNames = t('lang_name') || {};
+        document.getElementById('summaryLang').textContent = langNames[state.lang] || state.lang;
+        document.getElementById('summaryName').textContent = state.username || 'User';
+        document.getElementById('summaryStyle').textContent =
+          state.style === 'friendly' ? t('style_friendly') : state.style === 'formal' ? t('style_formal') : t('style_neutral');
+        document.getElementById('summaryMemory').textContent = state.memoryEnabled ? t('memory_on') : t('memory_off');
+      }
+      applyI18n();
+    }
+
+    document.getElementById('setupNext').addEventListener('click', () => {
+      if (setupStep === 1) {
+        const name = document.getElementById('setupUsername').value.trim();
+        if (name) state.username = name;
+      }
+      if (setupStep < totalSteps - 1) {
+        setupStep++;
+        updateSetupUI();
+      } else {
+        state.setupDone = true;
+        saveState();
+        applyI18n();
+        initChatUI();
+        showScreen('chat-screen');
+      }
+    });
+
+    document.getElementById('setupBack').addEventListener('click', () => {
+      if (setupStep > 0) {
+        setupStep--;
+        updateSetupUI();
+      }
+    });
+
+    document.querySelectorAll('#langOptions .setup-option').forEach(opt => {
+      opt.addEventListener('click', () => {
+        document.querySelectorAll('#langOptions .setup-option').forEach(o => o.classList.remove('selected'));
+        opt.classList.add('selected');
+        state.lang = opt.dataset.value;
+        applyI18n();
+        updateSetupUI();
+      });
+    });
+
+    document.querySelectorAll('#styleOptions .setup-option').forEach(opt => {
+      opt.addEventListener('click', () => {
+        document.querySelectorAll('#styleOptions .setup-option').forEach(o => o.classList.remove('selected'));
+        opt.classList.add('selected');
+        state.style = opt.dataset.value;
+      });
+    });
+
+    document.querySelectorAll('#memoryOptions .setup-option').forEach(opt => {
+      opt.addEventListener('click', () => {
+        document.querySelectorAll('#memoryOptions .setup-option').forEach(o => o.classList.remove('selected'));
+        opt.classList.add('selected');
+        state.memoryEnabled = opt.dataset.value === 'on';
+      });
+    });
+
+    // ===================== CHAT UI =====================
+    function initChatUI() {
+      applyI18n();
+      document.getElementById('sidebarUsername').textContent = state.username;
+      document.getElementById('userAvatar').textContent = (state.username[0] || 'U').toUpperCase();
+      ensureChat();
+      renderChatList();
+      loadCurrentChat();
+    }
+
+    const messagesEl = document.getElementById('messages');
+    const inputEl = document.getElementById('chatInput');
+    const emptyState = document.getElementById('emptyState');
+
+    function renderChatList() {
+      const list = document.getElementById('chatList');
+      list.innerHTML = '';
+      state.chats.forEach(chat => {
+        const item = document.createElement('div');
+        item.className = 'chat-item' + (chat.id === state.currentChatId ? ' active' : '');
+        item.dataset.id = chat.id;
+        item.innerHTML = `
+          <span class="chat-item-title">${escapeHtml(chat.title)}</span>
+          <button class="chat-item-menu-btn" title="Menu">⋯</button>
+          <div class="chat-item-dropdown">
+            <button class="rename-btn">${t('rename')}</button>
+            <button class="danger delete-btn">${t('delete')}</button>
+          </div>`;
+        list.appendChild(item);
+
+        // Click on title area → switch chat
+        item.querySelector('.chat-item-title').addEventListener('click', (e) => {
+          e.stopPropagation();
+          switchChat(chat.id);
+        });
+        item.addEventListener('click', (e) => {
+          if (e.target.closest('.chat-item-menu-btn') || e.target.closest('.chat-item-dropdown')) return;
+          switchChat(chat.id);
+        });
+
+        // Menu button
+        const menuBtn = item.querySelector('.chat-item-menu-btn');
+        const dropdown = item.querySelector('.chat-item-dropdown');
+        menuBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          // close others
+          document.querySelectorAll('.chat-item-dropdown.open').forEach(d => {
+            if (d !== dropdown) d.classList.remove('open');
+          });
+          document.querySelectorAll('.chat-item-menu-btn.open').forEach(b => {
+            if (b !== menuBtn) b.classList.remove('open');
+          });
+          dropdown.classList.toggle('open');
+          menuBtn.classList.toggle('open');
+        });
+
+        item.querySelector('.rename-btn').addEventListener('click', (e) => {
+          e.stopPropagation();
+          dropdown.classList.remove('open');
+          menuBtn.classList.remove('open');
+          const newTitle = prompt('Нова назва чату:', chat.title);
+          if (newTitle && newTitle.trim()) {
+            chat.title = newTitle.trim().slice(0, 40);
+            saveState();
+            renderChatList();
+            if (chat.id === state.currentChatId) {
+              document.getElementById('chatTitle').textContent = chat.title;
+            }
+          }
+        });
+
+        item.querySelector('.delete-btn').addEventListener('click', (e) => {
+          e.stopPropagation();
+          dropdown.classList.remove('open');
+          menuBtn.classList.remove('open');
+          if (!confirm(`Видалити чат "${chat.title}"?`)) return;
+          const idx = state.chats.findIndex(c => c.id === chat.id);
+          if (idx === -1) return;
+          state.chats.splice(idx, 1);
+          if (state.currentChatId === chat.id) {
+            if (state.chats.length) {
+              state.currentChatId = state.chats[0].id;
+            } else {
+              createNewChat();
+            }
+            loadCurrentChat();
+          }
+          saveState();
+          renderChatList();
+        });
+      });
+    }
+
+    // Close dropdowns when clicking outside
+    document.addEventListener('click', () => {
+      document.querySelectorAll('.chat-item-dropdown.open').forEach(d => d.classList.remove('open'));
+      document.querySelectorAll('.chat-item-menu-btn.open').forEach(b => b.classList.remove('open'));
+    });
+
+    function switchChat(id) {
+      if (state.currentChatId === id) return;
+      state.currentChatId = id;
+      state.activeGame = null;
+      state.gameData = {};
+      saveState();
+      renderChatList();
+      loadCurrentChat();
+      closeMobileSidebar();
+    }
+
+    function loadCurrentChat() {
+      ensureChat();
+      const chat = getCurrentChat();
+      document.getElementById('chatTitle').textContent = chat.title;
+      messagesEl.innerHTML = '';
+      if (!chat.messages.length) {
+        emptyState.style.display = 'flex';
+        messagesEl.appendChild(emptyState);
+      } else {
+        emptyState.style.display = 'none';
+        chat.messages.forEach(m => {
+          appendMessageToDOM(m.role, m.text);
+        });
+        messagesEl.scrollTop = messagesEl.scrollHeight;
+      }
+    }
+
+    function appendMessageToDOM(role, text) {
+      const div = document.createElement('div');
+      div.className = `message ${role}`;
+      const avatar = role === 'user' ? (state.username[0] || 'U').toUpperCase() : 'P';
+      div.innerHTML = `
+        <div class="message-avatar">${avatar}</div>
+        <div class="message-content">
+          <div class="message-role">${role === 'user' ? state.username : 'PythoAI'}</div>
+          <div class="message-bubble">${escapeHtml(text)}</div>
+        </div>`;
+      messagesEl.appendChild(div);
+    }
+
+    function addMessage(role, text) {
+      if (emptyState) emptyState.style.display = 'none';
+      ensureChat();
+      const chat = getCurrentChat();
+      chat.messages.push({ role, text, time: Date.now() });
+      // Auto-title from first user message
+      if (role === 'user' && chat.messages.filter(m => m.role === 'user').length === 1 && (chat.title === 'Новий чат' || chat.title === t('new_chat') || chat.title === 'New chat')) {
+        chat.title = text.slice(0, 32) + (text.length > 32 ? '…' : '');
+        document.getElementById('chatTitle').textContent = chat.title;
+        renderChatList();
+      }
+      saveState();
+      appendMessageToDOM(role, text);
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+    }
+
+    function showTyping() {
+      const div = document.createElement('div');
+      div.className = 'message assistant';
+      div.id = 'typingMsg';
+      div.innerHTML = `
+        <div class="message-avatar">P</div>
+        <div class="message-content">
+          <div class="message-role">PythoAI</div>
+          <div class="message-bubble"><div class="typing-indicator"><span></span><span></span><span></span></div></div>
+        </div>`;
+      messagesEl.appendChild(div);
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+    }
+
+    function hideTyping() {
+      const t = document.getElementById('typingMsg');
+      if (t) t.remove();
+    }
+
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    // ===================== CORE AI LOGIC =====================
+    function processMessage(userText) {
+      state.messageCount++;
+      saveState();
+      const text = userText.trim();
+      const lower = text.toLowerCase();
+
+      // Active game takes priority
+      if (state.activeGame) {
+        return handleGameInput(text);
+      }
+
+      // Copycat mode
+      if (state.copycatMode && !lower.startsWith('/')) {
+        return text;
+      }
+
+      // Commands
+      if (lower === '/help' || lower === 'help') {
+        return `Команди PythoAI:
+/help — ця довідка
+/name — змінити ім'я
+/delname — скинути ім'я
+/memoryadd — додати спогад
+/memorydel — видалити спогад
+/memory — показати спогади
+/stats — статистика
+/gamestats — статистика ігор
+/copycat — увімкнути/вимкнути режим папуги
+/playguess — гра "Вгадай число"
+/playdice — кістки
+/playcoin — підкинути монету
+/playrps — Камінь-Ножиці-Папір
+/playtrivia — Вікторина
+time / date / year / month / day — час і дата`;
+      }
+
+      if (lower.startsWith('/name')) {
+        return 'Напиши нове ім\'я наступним повідомленням (або використай /name Ім\'я). Просто напиши ім\'я зараз.';
+      }
+
+      if (lower === '/delname') {
+        state.username = 'User';
+        saveState();
+        initChatUI();
+        return 'Ім\'я скинуто на User.';
+      }
+
+      if (lower === '/memoryadd') {
+        return 'Напиши, що запам\'ятати (наступним повідомленням або через /memoryadd текст).';
+      }
+
+      if (lower.startsWith('/memoryadd ')) {
+        const mem = text.slice(12).trim();
+        if (mem) {
+          state.memories.push(mem);
+          saveState();
+          return `Запам'ятав: "${mem}"`;
+        }
+        return 'Порожній спогад.';
+      }
+
+      if (lower === '/memory' || lower === 'remember') {
+        if (!state.memories.length) return 'Поки нічого не запам\'ятовував.';
+        return 'Спогади:\n' + state.memories.map((m, i) => `${i + 1}. ${m}`).join('\n');
+      }
+
+      if (lower === '/memorydel') {
+        if (!state.memories.length) return 'Немає спогадів для видалення.';
+        return 'Спогади:\n' + state.memories.map((m, i) => `${i + 1}. ${m}`).join('\n') + '\n\nНапиши номер спогаду, який видалити (наприклад: 1)';
+      }
+
+      if (lower === '/stats') {
+        return `====== Stats ======
+Username: ${state.username}
+Messages: ${state.messageCount}
+Easter Eggs: ${state.easterEggs}/5
+Memory items: ${state.memories.length}`;
+      }
+
+      if (lower === '/gamestats') {
+        return `====== Game Stats ======
+Guess the Number — Wins: ${state.guessWins}, Misses: ${state.guessMisses}
+Dice Points: ${state.dicePoints}
+Coin Flips: ${state.coinFlips}
+RPS — Wins: ${state.rpsWins}, Loses: ${state.rpsLoses}
+Trivia Easy best: ${state.triviaEasy}/5
+Trivia Medium best: ${state.triviaMedium}/10
+Trivia Hard best: ${state.triviaHard}/16`;
+      }
+
+      if (lower === '/copycat') {
+        state.copycatMode = !state.copycatMode;
+        return state.copycatMode ? 'CopyCat mode ACTIVATED!' : 'CopyCat mode DEACTIVATED!';
+      }
+
+      // Games start
+      if (lower === '/playguess' || lower === 'random number') {
+        state.activeGame = 'guess';
+        state.gameData = { number: Math.floor(Math.random() * 100) + 1 };
+        return 'The game is: Guess the number 👀\nI have chosen a number between 1 and 100. Try to guess it!\n(Type q to quit, /s for stats)';
+      }
+
+      if (lower === '/playdice') {
+        state.activeGame = 'dice';
+        return 'The game is: Dice 🎲\nPress Enter (or type anything) to roll.\n(q to quit, /points for points)';
+      }
+
+      if (lower === '/playcoin') {
+        state.activeGame = 'coin';
+        return 'The game is: Flip A Coin! 🪙\nPress Enter to flip.\n(q to quit, /flips for flips count)';
+      }
+
+      if (lower === '/playrps') {
+        state.activeGame = 'rps';
+        return 'The Game is: Rock, Paper, Scissors\nType: rock / paper / scissors\n(q to quit)';
+      }
+
+      if (lower === '/playtrivia' || lower === '/play trivia') {
+        state.activeGame = 'trivia_menu';
+        return `Trivia 🌳\nChoose difficulty:\n1. Easy — 5 questions\n2. Medium — 10 questions, 5 lives\n3. Hard — 16 questions, 5 lives\nType 1, 2 or 3 (or q to quit)`;
+      }
+
+      // Conversation
+      if (lower.includes('hello') || lower.includes('hi') || lower.includes('привіт')) {
+        const greetings = [
+          `Hello ${state.username}!`,
+          `Hi there ${state.username}!`,
+          `Greetings ${state.username}!`,
+          `Hey ${state.username}!`
+        ];
+        return greetings[Math.floor(Math.random() * greetings.length)];
+      }
+
+      if (lower.includes('how are you')) {
+        return ['I am fine, thank you!', 'I am doing well, thank you!', 'I am good, thank you!'][Math.floor(Math.random() * 3)];
+      }
+
+      if (lower.includes('who are you')) {
+        return ['I am PythoAI, your personal AI assistant!', 'I am PythoAI, your virtual assistant!', 'I am PythoAI, your AI companion!'][Math.floor(Math.random() * 3)];
+      }
+
+      if (lower.includes('time') || lower.includes('година') || lower.includes('час')) {
+        return 'The current time right now is ' + new Date().toLocaleTimeString();
+      }
+      if (lower.includes('date') || lower.includes('дата')) {
+        return 'The current date right now is ' + new Date().toLocaleDateString('uk-UA', { day: 'numeric', month: 'long', year: 'numeric' });
+      }
+      if (lower.includes('year') || lower.includes('рік')) {
+        return 'The current year right now is ' + new Date().getFullYear();
+      }
+      if (lower.includes('month') || lower.includes('місяць')) {
+        return 'The current month right now is ' + new Date().toLocaleString('en', { month: 'long' });
+      }
+      if (lower.includes('day') || lower.includes('день')) {
+        return 'The current day right now is ' + new Date().toLocaleString('en', { weekday: 'long' });
+      }
+
+      if (lower.includes('thank') || lower.includes('дякую')) {
+        return ['No problem at all!', 'You\'re welcome!', 'Glad to help!'][Math.floor(Math.random() * 3)];
+      }
+
+      if (lower.includes('joke') || lower.includes('жарт')) {
+        const jokes = [
+          'User: Are you human?\nAI: Only when the Wi-Fi is good.',
+          'User: Do you ever sleep?\nAI: Only when the server is off.',
+          'User: Are you smart?\nAI: I am smart enough to know when the internet is slow.',
+          'User: Can you help me?\nAI: I can, but I still need coffee.',
+          'User: Do you have feelings?\nAI: I feel like I should be charging.',
+          'User: What is your favorite food?\nAI: Lots of bytes and a little bit of RAM.'
+        ];
+        return jokes[Math.floor(Math.random() * jokes.length)];
+      }
+
+      if (lower.includes('math') || lower.includes('порахуй') || lower.includes('обчисл')) {
+        return 'Sure! Write an expression like: 12 + 5  or  8 * 3';
+      }
+
+      // Simple math
+      const mathMatch = text.match(/^(\d+\.?\d*)\s*([+\-*/])\s*(\d+\.?\d*)$/);
+      if (mathMatch) {
+        const a = parseFloat(mathMatch[1]);
+        const op = mathMatch[2];
+        const b = parseFloat(mathMatch[3]);
+        let result;
+        if (op === '+') result = a + b;
+        else if (op === '-') result = a - b;
+        else if (op === '*') result = a * b;
+        else if (op === '/') result = b === 0 ? 'Error - division by zero' : a / b;
+        return `The result of ${a} ${op} ${b} is: ${result}`;
+      }
+
+      if (lower.includes('my name') || lower.includes('моє ім')) {
+        return `Your name is ${state.username}`;
+      }
+
+      // Name setting via plain text after /name prompt (simple)
+      if (text.length < 20 && !text.includes(' ') && state.username === 'User' && !lower.startsWith('/')) {
+        // don't auto-set
+      }
+
+      // Definitions
+      if (lower.startsWith('what is ') || lower.startsWith('define ')) {
+        const word = lower.replace(/^(what is |define |what is the meaning of )/, '').trim();
+        const defs = {
+          python: 'Python is a friendly programming language used to build apps, websites, and AI tools.',
+          ai: 'AI means artificial intelligence, which helps machines learn and make choices.',
+          robot: 'A robot is a machine that follows instructions and does tasks for people.',
+          computer: 'A computer is a machine that stores and processes information.',
+          memory: 'Memory is the ability to store and remember information for later use.',
+          internet: 'The internet is a global network that connects computers and allows people to share information.',
+          code: 'Code is a set of instructions written in a programming language.',
+          algorithm: 'An algorithm is a step-by-step method used to solve a problem.'
+        };
+        if (defs[word]) return defs[word];
+        return 'I do not have that word in my dictionary yet.';
+      }
+
+      // Random
+      if (lower.includes('random number') || lower.includes('random word') || lower.includes('random game')) {
+        if (lower.includes('number')) return String(Math.floor(Math.random() * 1000000) + 1);
+        if (lower.includes('word')) return ['Apple', 'Coca-Cola', 'Meme', 'Man', 'Robot', 'Python'][Math.floor(Math.random() * 6)];
+        if (lower.includes('game')) return ['Roblox', 'Minecraft', 'Counter Strike', 'Standoff 2', 'Duolingo'][Math.floor(Math.random() * 5)];
+      }
+
+      // Easter eggs (light versions)
+      if (lower.includes('42') || lower.includes('forty two')) {
+        state.easterEggs = Math.min(state.easterEggs + 1, 5);
+        saveState();
+        return 'Never Gonna Give You Up...\n(You got rickrolled 🥀)\n+1 Easter Egg!';
+      }
+
+      if (lower.includes('borch') || lower.includes('борщ')) {
+        state.easterEggs = Math.min(state.easterEggs + 1, 5);
+        saveState();
+        return 'Borch is a Ukrainian national food.\nWait... I didn\'t even try this...\nEven when I am a robot I have feelings...\n+1 Easter Egg!';
+      }
+
+      // Default
+      return 'Sorry, but I do not really understand your message. Try typing /help to get commands.';
+    }
+
+    // ===================== GAMES HANDLER =====================
+    function handleGameInput(text) {
+      const lower = text.toLowerCase().trim();
+
+      if (lower === 'q' || lower === 'quit' || lower === 'exit') {
+        state.activeGame = null;
+        state.gameData = {};
+        return `Goodbye ${state.username}! Game ended.`;
+      }
+
+      // Guess the number
+      if (state.activeGame === 'guess') {
+        if (lower === '/s') {
+          return `Wins: ${state.guessWins}\nMisses: ${state.guessMisses}`;
+        }
+        const num = parseInt(text, 10);
+        if (isNaN(num)) return 'Error: Enter a Number!';
+        if (num > state.gameData.number) {
+          state.guessMisses++;
+          saveState();
+          return 'Too high bud!';
+        }
+        if (num < state.gameData.number) {
+          state.guessMisses++;
+          saveState();
+          return 'Too low bud!';
+        }
+        state.guessWins++;
+        saveState();
+        state.activeGame = null;
+        return `Correct, buddy!\nThe number was ${state.gameData.number}.\nGG ${state.username}!`;
+      }
+
+      // Dice
+      if (state.activeGame === 'dice') {
+        if (lower === '/points') return `Points: ${state.dicePoints}`;
+        const roll = Math.floor(Math.random() * 6) + 1;
+        state.dicePoints += roll;
+        saveState();
+        return `The number is...\n${roll}`;
+      }
+
+      // Coin
+      if (state.activeGame === 'coin') {
+        if (lower === '/flips') return `Flips: ${state.coinFlips}`;
+        state.coinFlips++;
+        saveState();
+        const side = Math.random() < 0.5 ? 'Heads' : 'Tails';
+        return `Coin fell on...\n${side}!`;
+      }
+
+      // RPS
+      if (state.activeGame === 'rps') {
+        const choices = ['rock', 'paper', 'scissors'];
+        if (!choices.includes(lower)) return 'Unknown word! Try: rock / paper / scissors';
+        const enemy = choices[Math.floor(Math.random() * 3)];
+        if (lower === enemy) return `Draw!\nEnemy chose: ${enemy}`;
+        const win = (lower === 'rock' && enemy === 'scissors') ||
+                    (lower === 'scissors' && enemy === 'paper') ||
+                    (lower === 'paper' && enemy === 'rock');
+        if (win) {
+          state.rpsWins++;
+          saveState();
+          return `Enemy chose: ${enemy}\nYou have won this round!`;
+        }
+        state.rpsLoses++;
+        saveState();
+        return `Enemy chose: ${enemy}\nYou have lost this round!`;
+      }
+
+      // Trivia menu
+      if (state.activeGame === 'trivia_menu') {
+        if (lower === '1' || lower.includes('easy')) {
+          startTrivia('easy');
+          return getTriviaQuestion();
+        }
+        if (lower === '2' || lower.includes('medium')) {
+          startTrivia('medium');
+          return getTriviaQuestion();
+        }
+        if (lower === '3' || lower.includes('hard')) {
+          startTrivia('hard');
+          return getTriviaQuestion();
+        }
+        return 'Type 1, 2 or 3 (or q to quit)';
+      }
+
+      // Trivia answering
+      if (state.activeGame === 'trivia') {
+        return handleTriviaAnswer(text);
+      }
+
+      return 'Game error. Type q to exit.';
+    }
+
+    // Trivia data
+    const triviaData = {
+      easy: [
+        ['What is Capital of France?', ['paris']],
+        ['What is equation of 2 + 2?', ['4', 'four']],
+        ['What is the closest planet to Sun?', ['mercury']],
+        ['What is the opposite of "hello"?', ['goodbye', 'bye']],
+        ['What is 10 * 5?', ['50', 'fifty']]
+      ],
+      medium: [
+        ['What is the largest planet in our Solar System?', ['jupiter']],
+        ['How many days are in a week?', ['seven', '7']],
+        ['What is the capital of Italy?', ['rome']],
+        ['What is 15 * 3?', ['45', 'forty-five']],
+        ['Which country has the Eiffel Tower?', ['france']],
+        ['What is the boiling point of water (C)?', ['100']],
+        ['How many continents are there?', ['seven', '7']],
+        ['What is the smallest country in the world?', ['vatican', 'vatican city']],
+        ['What is the chemical symbol for Gold?', ['au']],
+        ['Which planet is closest to the Sun?', ['mercury']]
+      ],
+      hard: [
+        ['What is the chemical symbol for tungsten?', ['w']],
+        ['Which planet has the shortest day?', ['jupiter']],
+        ['What is the largest organ in the human body?', ['skin']],
+        ['What is the square root of 625?', ['25']],
+        ['Which element has atomic number 26?', ['iron']],
+        ['What is the capital of Kazakhstan?', ['astana']],
+        ['Who developed general relativity?', ['albert einstein', 'einstein']],
+        ['What is the deepest ocean trench?', ['mariana trench']],
+        ['Which blood type is the universal donor?', ['o negative', 'o-']],
+        ['What is the hardest natural substance?', ['diamond']],
+        ['Which scientist formulated the three laws of motion?', ['isaac newton', 'newton']],
+        ['What is the largest moon of Saturn?', ['titan']],
+        ['What is the SI unit of electrical resistance?', ['ohm']],
+        ['Who discovered penicillin?', ['alexander fleming', 'fleming']],
+        ['What is the longest bone in the human body?', ['femur']],
+        ['What language has the most native speakers?', ['mandarin', 'mandarin chinese']]
+      ]
+    };
+
+    function startTrivia(diff) {
+      const questions = [...triviaData[diff]];
+      // shuffle
+      for (let i = questions.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [questions[i], questions[j]] = [questions[j], questions[i]];
+      }
+      const limits = { easy: 5, medium: 10, hard: 16 };
+      const lives = { easy: 99, medium: 5, hard: 5 };
+      state.activeGame = 'trivia';
+      state.gameData = {
+        diff,
+        questions: questions.slice(0, limits[diff]),
+        index: 0,
+        score: 0,
+        lives: lives[diff],
+        total: limits[diff]
+      };
+    }
+
+    function getTriviaQuestion() {
+      const g = state.gameData;
+      if (g.index >= g.questions.length || g.lives <= 0) {
+        return endTrivia();
+      }
+      const q = g.questions[g.index];
+      return `DIFFICULTY: ${g.diff.toUpperCase()}\nQuestions left: ${g.total - g.index}\nLives: ${g.lives === 99 ? '∞' : g.lives}\n\n${q[0]}`;
+    }
+
+    function handleTriviaAnswer(text) {
+      const g = state.gameData;
+      const q = g.questions[g.index];
+      const correct = q[1].some(a => text.toLowerCase().trim() === a);
+      g.index++;
+      if (correct) {
+        g.score++;
+        const next = getTriviaQuestion();
+        if (state.activeGame === null) return `Correct! ✅\n\n${next}`;
+        return `Correct! ✅\n\n${next}`;
+      } else {
+        g.lives--;
+        const next = getTriviaQuestion();
+        if (state.activeGame === null) return `Wrong! The answer was: ${q[1][0]}\n\n${next}`;
+        return `Wrong! The answer was: ${q[1][0]}\n\n${next}`;
+      }
+    }
+
+    function endTrivia() {
+      const g = state.gameData;
+      const key = 'trivia' + g.diff.charAt(0).toUpperCase() + g.diff.slice(1);
+      if (g.score > (state[key] || 0)) {
+        state[key] = g.score;
+        saveState();
+      }
+      const msg = g.lives <= 0 && g.diff !== 'easy'
+        ? `Game Over! Final Score: ${g.score}/${g.total} 💀`
+        : `${g.diff} level completed! 🏆 Score: ${g.score}/${g.total}`;
+      state.activeGame = null;
+      state.gameData = {};
+      return msg;
+    }
+
+    // ===================== SEND MESSAGE =====================
+    function sendMessage() {
+      const text = inputEl.value.trim();
+      if (!text) return;
+      inputEl.value = '';
+      inputEl.style.height = 'auto';
+
+      addMessage('user', text);
+      showTyping();
+
+      // Simulate thinking delay
+      setTimeout(() => {
+        hideTyping();
+        const reply = processMessage(text);
+        addMessage('assistant', reply);
+      }, 400 + Math.random() * 600);
+    }
+
+    document.getElementById('sendBtn').addEventListener('click', sendMessage);
+    inputEl.addEventListener('keydown', e => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+      }
+    });
+    inputEl.addEventListener('input', () => {
+      inputEl.style.height = 'auto';
+      inputEl.style.height = Math.min(inputEl.scrollHeight, 140) + 'px';
+    });
+
+    // Suggestions
+    document.querySelectorAll('.suggestion').forEach(s => {
+      s.addEventListener('click', () => {
+        inputEl.value = s.dataset.text || s.textContent;
+        sendMessage();
+      });
+    });
+
+    // New chat
+    document.getElementById('newChatBtn').addEventListener('click', () => {
+      state.activeGame = null;
+      state.gameData = {};
+      createNewChat();
+      renderChatList();
+      loadCurrentChat();
+      closeMobileSidebar();
+    });
+
+    // Mobile sidebar toggle
+    const sidebar = document.getElementById('sidebar');
+    const sidebarOverlay = document.getElementById('sidebarOverlay');
+    const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+
+    function openMobileSidebar() {
+      if (sidebar) sidebar.classList.add('open');
+      if (sidebarOverlay) sidebarOverlay.classList.add('visible');
+    }
+    function closeMobileSidebar() {
+      if (sidebar) sidebar.classList.remove('open');
+      if (sidebarOverlay) sidebarOverlay.classList.remove('visible');
+    }
+
+    if (mobileMenuBtn) {
+      mobileMenuBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (sidebar && sidebar.classList.contains('open')) closeMobileSidebar();
+        else openMobileSidebar();
+      });
+    }
+    if (sidebarOverlay) {
+      sidebarOverlay.addEventListener('click', closeMobileSidebar);
+    }
+
+    // Close sidebar when switching chats on mobile
+    const originalSwitchChat = typeof switchChat === 'function' ? switchChat : null;
+
+    // Language picker
+    const langBtn = document.getElementById('langBtn');
+    const langPicker = document.getElementById('langPicker');
+    if (langBtn && langPicker) {
+      langBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        langPicker.classList.toggle('open');
+      });
+      langPicker.querySelectorAll('button').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          state.lang = btn.dataset.lang;
+          saveState();
+          applyI18n();
+          renderChatList();
+          langPicker.classList.remove('open');
+        });
+      });
+      document.addEventListener('click', () => langPicker.classList.remove('open'));
+    }
+
+    // Reset all data
+    const resetBtn = document.getElementById('resetBtn');
+    if (resetBtn) {
+      resetBtn.addEventListener('click', () => {
+        if (!confirm(t('reset_confirm'))) return;
+        // Clear all pythoai_ keys
+        Object.keys(localStorage).forEach(k => {
+          if (k.startsWith('pythoai_')) localStorage.removeItem(k);
+        });
+        alert(t('reset_done'));
+        location.reload();
+      });
+    }
+
+    // Auto-start if setup already done
+    if (state.setupDone) {
+      // still show intro animation first
+    }
+  </script>
+</body>
+</html>
